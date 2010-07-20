@@ -9,6 +9,9 @@
 #define TITLE "pompouser"
 
 #define BUTTON_NONE     -1
+#define MOTION          1
+#define CLICK           1
+#define OK              1
 
 typedef struct {
     unsigned int x;
@@ -23,17 +26,16 @@ typedef struct {
     /* SDL_Surface *icon_pressed = NULL; */
     SDL_Surface *play;
     /* SDL_Surface *play_pressed; */
-
-    int xoff; /* horizontal offset */
-    int yoff; /* vertical offset */
-    int num; /* total number of buttons */
-    int active; /* number of active button */
-} face;
+    int active;
+    int before;
+    int total;
+} pompface;
 
 typedef struct node {
-    int x;
-    int y;
+    unsigned int x;
+    unsigned int y;
     int i;
     struct node *next;
 } node;
+
 

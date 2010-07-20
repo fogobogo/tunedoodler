@@ -1,18 +1,26 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_mixer.h> /* audio handling */
 
 #include "define.h"
 #include "config.h"
 #include "sdl.c"
+#include "init.c"
+#include "node.c"
 #include "pompcore.c"
 #include "tune.c"
 
+/* TODO: removal of dupes */
+/* TODO: seperate ui from core code */
+/* TODO: proper loading routine */
+/* TODO: removal of nodes */
 
 int main (int argc, char *argv[])
 {
-    SDL_Surface *surface;
+    SDL_Surface *display;
     SDL_Surface *background;
+    SDL_Surface *lines;
+    SDL_Surface *overlay;
 
     SDL_Event event;
 
@@ -20,57 +28,52 @@ int main (int argc, char *argv[])
     int loop = 1;
     int blit = 0;
 
-    int i;
+    int n = 0; /* node counter */
 
-    char *sounds[] = {"default/04.wav","default/03.wav"};
-    Mix_Chunk wave[2];
+    int i = 0; /* general purpose iterator */
 
-    face ui;
+    char *instrument[] = { INSTRUMENTA, NULL };
+    Mix_Chunk *son[10];
 
-    node *first;
+    pompface    ui; /* user interface resources. */
+    point offset;
+    point margin;
+
+
+    node *head;
     node *cur;
     node *new;
-    node *last;
 
-    node *del;
 
     SDL_Rect pos;
-    SDL_Rect old;
     SDL_Rect clip;
 
     atexit(SDL_Quit);
 
-    /* init audio */
-    Mix_OpenAudio(44100,MIX_DEFAULT_FORMAT,2,512);
-    for(i=0;i<2; i++) {
-        Mix_LoadWAV(sounds[i]);
+    /* let's go */
+    display = init_sdl(SCREEN_WIDTH, SCREEN_HEIGHT); /* init sdl */
+    background = init_background(SCREEN_WIDTH,SCREEN_HEIGHT,BACKGROUND); /* init background */
+
+    init_ui(&ui);
+    init_nodes(&head,&cur,&new);
+
+    init_total(display,&ui);
+    init_offsets(display,ui,&offset);
+    init_margins(ui,&margin);
+
+    init_audio();
+    for(i=0;i<10;i++) {
+        son[i] = Mix_LoadWAV(instrument[i]);
     }
 
-    /* let's go */
-    surface = init_sdl(SCREEN_WIDTH, SCREEN_HEIGHT);
-    background = init_background(SCREEN_WIDTH,SCREEN_HEIGHT,BACKGROUND);
-    /* load images */
-    ui.button = load_image(BUTTON);
-    ui.button_pressed = load_image(BUTTON_PRESSED);
-    ui.icon = load_image(ICON);
-    ui.play = load_image(PLAY);
-    ui.line = load_image(LINE);
+    blit_lines(background,ui,offset);
+    blit_buttons(background,ui,offset);
+    blit_icons(background,ui,offset,margin);
+    SDL_BlitSurface(background,NULL,display,NULL);
+    SDL_UpdateRect(display,0,0,0,0);
+    
+    Mix_Volume(-1,MIX_MAX_VOLUME);
 
-    ui.active = BUTTON_NONE;
-
-    init_num(surface,&ui);
-    init_offsets(surface,&ui);
-
-
-    blit_lines(background,ui);
-    blit_ui(background,ui);
-    SDL_BlitSurface(background,NULL,surface,NULL);
-    SDL_UpdateRect(surface,0,0,0,0);
-
-    first = (node *)malloc(sizeof(node));
-    cur = first;    
-    cur->next = NULL;
-    /* AUDIO ? */
     
     while(loop) {
 		/* get ticks for FPS calculation */
@@ -86,47 +89,50 @@ int main (int argc, char *argv[])
 							loop = 0;
 							break;
                         case SDLK_p:
+                            ui.active = BUTTON_NONE;
+                            update_pos(event,ui,offset,&pos);
+                            update_display(background,display,pos);
+                            head = msort_nodes(head,n);
+                            play_tune(son,TEMPO,cur,head,n);
+                            break;
+                        case SDLK_s:
+                            head = msort_nodes(head,n);
+                            cur = head;
+                            while(cur->next != NULL) {
+                                printf("x: %d\n",cur->x);
+                                cur = cur->next;
+                            }
                             break;
 					}
                 /* mouse button handling */
                 case SDL_MOUSEBUTTONDOWN:
                     switch(event.button.button) {
                         case SDL_BUTTON_LEFT:
-                            ui.active = button_click(surface,event,ui);
+                            button_click(event,display,&ui,offset);
                             update_clip(ui,&clip);
-                            /*
-                            if( event.button.y > ui.yoff 
-                                && ui.active >  -1) {
-                                SDL_BlitSurface(ui.icon,&clip,surface,&pos);
-                                cur->x = event.button.x;
-                                cur->y = event.button.y;
-                                cur->i = ui.active;
-                                new = (node *)malloc(sizeof(node));
-                                new->next = NULL;
-                                cur->next = new;
-                                cur = new;
+                            if(check_bounds(event,display,ui,offset) == OK) {
+                                store_node(event,display,ui,offset,&cur,&new);
+                                n++;
+                                update_pos(event,ui,offset,&pos);
+                                blit_click(background,ui,pos,clip);
                             }
-                            */
-                            printf("bn: %d\n",ui.active);
+                            printf("#: %d\n",ui.active);
+                            printf("nodes: %d\n",n);
                             break;
                         case SDL_BUTTON_RIGHT:
                             /* set button to none on right click */
                             ui.active = BUTTON_NONE;
-                            SDL_BlitSurface(background,&pos,surface,&pos);
-                            SDL_UpdateRect(surface,pos.x,pos.y,pos.w,pos.h);
-                            printf("bn: %d\n",ui.active);
+                            update_display(background,display,pos);
+                            printf("#: %d\n",ui.active);
                             break;
                     }
                 /* mouse motion handling */
                 case SDL_MOUSEMOTION:
-                    /* ugly */
-                    if( (event.motion.x / ui.icon->h) * ui.icon->h != pos.x
-                        || (event.motion.y / ui.icon->h) * ui.icon->h != pos.y ) {
-                        SDL_BlitSurface(background,&pos,surface,&pos);
-                        SDL_UpdateRect(surface,pos.x,pos.y,pos.w,pos.h);
-                        update_pos(event,ui,&pos);
-                        draw_cursor(surface,pos,ui);
-                        printf("blit %d\n",blit++);
+                    if(detect_motion(event,ui,pos) == 1) {
+                        update_display(background,display,pos);
+                        printf("%d\n",blit++);
+                        update_pos(event,ui,offset,&pos);
+                        blit_cursor(display,pos,clip,ui);
                     }
                     break;
 
@@ -148,7 +154,7 @@ int main (int argc, char *argv[])
 		}
        
         /*
-        SDL_UpdateRect(surface,0,0,0,0);
+        SDL_UpdateRect(display,0,0,0,0);
         */
 
 		/* limit framerate */
@@ -161,19 +167,14 @@ int main (int argc, char *argv[])
 	/*main loop ends here. */
 	}
 
-    cur = first;
+    cur = head;
     while(cur->next != NULL) {
         printf("x: %d\ty: %d\ti: %d\n",cur->x,cur->y,cur->i);
         cur = cur->next;
     }
 
     printf("cleaning up... ");
-    cur = first;
-    while(cur->next != NULL) {
-        del = cur->next;
-        free(cur);
-        cur = del;
-    }
+    free_nodes(&head,&cur);
     /* offload ui */
     SDL_FreeSurface(ui.line);
     SDL_FreeSurface(ui.button);
@@ -183,12 +184,18 @@ int main (int argc, char *argv[])
 
     /* offload main surfaces */
     SDL_FreeSurface(background); 
-    SDL_FreeSurface(surface);
+    /*
+    SDL_FreeSurface(lines); 
+    SDL_FreeSurface(overlay); 
+    */
+    SDL_FreeSurface(display);
+    for(i=0;i<8;i++) {
+       Mix_FreeChunk(son[i]); 
+    }
 
-    for(i=0;i<2;i++) {
-        Mix_FreeChunk(
-
+    Mix_CloseAudio();
     printf("done.\n");
+    SDL_Quit();
     return(0);
 
 }

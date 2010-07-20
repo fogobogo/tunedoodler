@@ -1,57 +1,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_mixer.h>
 
 
 void
-init_num(SDL_Surface *surface, face *ui)
-{
-    int b, i; /* buttons, icons */
-    int p; /* pixels */
-
-    b = ((surface->w - ui->play->w) / ui->button->w);
-    /* calculate the number of icons. this assumes the icon width equals the icon height */
-    i = ui->icon->w / ui->icon->h; 
-
-    /* if there are less icons than buttons that fit on the screen blit only as many buttons as there are icons */
-    if(b > i) { ui->num = i; }
-    /* else blit as many buttons as possible which means there will be some icons hidden (or match the button number) */
-    else { ui->num = b; }
-}
-
-void
-init_offsets(SDL_Surface *surface, face *ui)
-{
-    /* calculate the horizontal offset (left, right) relative to the window so the buttons are always centered on the screen */
-    /* store the values so we can later figure out what button was pressed */
-    ui->xoff = ((surface->w - ui->play->w) - (ui->button->w * ui->num)) / 2; /* from left */
-    ui->yoff = (surface->h - (ui->line->h * LINE_NO * 2)) / 2;
-    printf("xoff: %d\n",ui->xoff);
-    printf("yoff: %d\n",ui->yoff);
-}
-
-void
-blit_ui(SDL_Surface *surface, face ui)
+blit_buttons(SDL_Surface *surface, pompface ui, point offset)
 {
     SDL_Rect pos;
-    SDL_Rect clip;
-    int i; /* iterator */
-    int xm, ym; /* x, y margin */
+    int i;
 
     /* blit "play" button */
     SDL_BlitSurface(ui.play,NULL,surface,NULL);
     /* blit sound buttons */
-    for(i=0;i<ui.num;i++) {
-        pos.x = ui.xoff + (ui.button->w * i);
+    for(i=0;i<ui.total;i++) {
+        pos.x = offset.x + (ui.button->w * i);
         pos.y = 0;
         SDL_BlitSurface(ui.button,NULL,surface,&pos);
     }
-    /* blit icons */
-    /* to center icons on buttons */
-    xm = (ui.button->w - ui.icon->h) / 2;
-    ym = (ui.button->h - ui.icon->h) / 2;
+}
 
-    for(i=0;i<ui.num;i++) {
+void
+blit_icons(SDL_Surface *surface, pompface ui, point offset, point margin)
+{
+    SDL_Rect pos;
+    SDL_Rect clip;
+    int i; /* iterator */
+
+    /* blit icons */
+
+    for(i=0;i<ui.total;i++) {
         /* clip icons */
         clip.x = ui.icon->h * i;
         clip.y = 0;
@@ -59,8 +37,8 @@ blit_ui(SDL_Surface *surface, face ui)
         clip.h = ui.icon->h;
 
         /* position icons */
-        pos.x = ui.xoff + xm + ( (ui.icon->h + (xm * 2)) * i );
-        pos.y = ym; 
+        pos.x = offset.x + margin.x + ( (ui.icon->h + (margin.x * 2)) * i );
+        pos.y = margin.y; 
         /* blit icon on surface */
         SDL_BlitSurface(ui.icon,&clip,surface,&pos);
     }
@@ -68,7 +46,7 @@ blit_ui(SDL_Surface *surface, face ui)
 }
 
 void
-blit_lines(SDL_Surface *background, face ui)
+blit_lines(SDL_Surface *surface, pompface ui, point offset)
 {
     SDL_Rect pos;
     int i; /* iterator */
@@ -76,42 +54,30 @@ blit_lines(SDL_Surface *background, face ui)
    
     /* blit lines */
     for(i=0;i<LINE_NO;i++) {
-        for(x=0;x<background->w;x+=ui.line->w) {
+        for(x=0;x<surface->w;x+=ui.line->w) {
             pos.x = x;
-            pos.y = (ui.yoff + ui.line->h) + (ui.line->h * i * 2) + (ui.icon->h / 2);
+            pos.y = (offset.y + ui.icon->h) + (ui.icon->h * i * 2);
 
-            SDL_BlitSurface(ui.line,NULL,background,&pos);
+            SDL_BlitSurface(ui.line,NULL,surface,&pos);
         }
     }
 }
 
-/* create background with color */
-SDL_Surface*
-init_background(unsigned int w, unsigned int h, unsigned char r, unsigned char g, unsigned char b)
-{
-    SDL_Surface *tmp;
-    tmp = SDL_CreateRGBSurface(SDL_FLAGS,w,h,DEPTH,0,0,0,0);
-    SDL_FillRect(tmp,NULL,SDL_MapRGB(tmp->format,r,b,g));
-    return(tmp);
-}
 
-int
-button_click(SDL_Surface *surface, SDL_Event event, face ui)
+void
+button_click(SDL_Event event, SDL_Surface *display, pompface *ui, point offset)
 {
-    int tmp;
-    if( event.button.x > ui.xoff && 
-        event.button.y < ui.button->h && 
-        event.button.x < ui.button->w * ui.num + ui.xoff) {
-        tmp = (event.button.x - ui.xoff) / ui.button->w;
-        return(tmp);
+    if( event.button.x > offset.x && 
+        event.button.y < ui->button->h && 
+        event.button.x < ui->button->w * ui->total + offset.x) {
+        ui->before = ui->active;
+        ui->active = (event.button.x - offset.x) / ui->button->w;
     }
-
-    else { return(ui.active); }
 
 }
 
 void
-update_clip(face ui, SDL_Rect *clip)
+update_clip(pompface ui, SDL_Rect *clip)
 {
     if(ui.active > -1) {
         clip->x = ui.icon->h * ui.active;
@@ -122,12 +88,10 @@ update_clip(face ui, SDL_Rect *clip)
 }
 
 void
-update_pos(SDL_Event event, face ui, SDL_Rect *pos)
+update_pos(SDL_Event event, pompface ui, point offset, SDL_Rect *pos)
 {
-    int x, y;
-    if(ui.active > -1) {
-
-        if(event.motion.y > ui.yoff) {
+    if(ui.active > BUTTON_NONE) { /* if a button is active */
+        if(event.motion.y > offset.y) {
             pos->x = (event.motion.x / ui.icon->h) * ui.icon->h;
             pos->y = (event.motion.y / ui.icon->h) * ui.icon->h;
             pos->w = ui.icon->h;
@@ -144,15 +108,76 @@ update_pos(SDL_Event event, face ui, SDL_Rect *pos)
 }
 
 void
-draw_cursor(SDL_Surface *surface, SDL_Rect pos, face ui)
+blit_cursor(SDL_Surface *display, SDL_Rect pos, SDL_Rect clip, pompface ui)
 {
-    SDL_Rect clip;
+    SDL_BlitSurface(ui.icon,&clip,display,&pos);
+    SDL_UpdateRect(display,pos.x,pos.y,pos.w,pos.h);
+}
 
-    clip.x = ui.icon->h * ui.active;
-    clip.y = 0;
-    clip.w = ui.icon->h;
-    clip.h = ui.icon->h;
+void
+update_display(SDL_Surface *surface, SDL_Surface *display, SDL_Rect pos)
+{
+    SDL_BlitSurface(surface,&pos,display,&pos);
+    SDL_UpdateRect(display,pos.x,pos.y,pos.w,pos.h);
+}
 
+int
+detect_motion(SDL_Event event, pompface ui, SDL_Rect pos)
+{
+    /* check if the pointer moved to another cell of the grid */
+    if(((event.motion.x / ui.icon->h) * ui.icon->h != pos.x
+    && ui.active > BUTTON_NONE)
+    || ((event.motion.y / ui.icon->h) * ui.icon->h != pos.y
+    && ui.active > BUTTON_NONE)) {
+        return(MOTION);
+    }
+}
+
+void
+init_audio()
+{
+    if(Mix_OpenAudio(44100,MIX_DEFAULT_FORMAT,2,512) == 1) {
+        fprintf(stderr,"%s\n",Mix_GetError());
+    }
+}
+
+int
+check_bounds(SDL_Event event, SDL_Surface *display, pompface ui, point offset)
+{
+    if(((event.button.y > offset.y) 
+       && (ui.active >  -1))
+       || ((event.button.y > display->h - offset.y) 
+       && (ui.active >  -1))) {
+
+        return(OK);
+    }
+}
+
+void
+blit_click(SDL_Surface *surface, pompface ui, SDL_Rect pos, SDL_Rect clip)
+{
     SDL_BlitSurface(ui.icon,&clip,surface,&pos);
     SDL_UpdateRect(surface,pos.x,pos.y,pos.w,pos.h);
 }
+
+void
+play_tune(Mix_Chunk son[], int tempo, node *cur, node *head, int n)
+{
+    int time;
+
+    cur = head;
+    while(n != 0) {
+        while(cur->x == time) {
+            Mix_PlayChannel(-1,son[cur->y],0);
+            cur = cur->next;
+            n--;
+        }
+
+        SDL_Delay(tempo);
+        time++
+    }
+}
+
+
+
+
