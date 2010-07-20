@@ -12,7 +12,7 @@ blit_buttons(SDL_Surface *surface, pompface ui, point offset)
 
     /* blit "play" button */
     SDL_BlitSurface(ui.play,NULL,surface,NULL);
-    /* blit sound buttons */
+    /* blit instrument buttons */
     for(i=0;i<ui.total;i++) {
         pos.x = offset.x + (ui.button->w * i);
         pos.y = 0;
@@ -53,6 +53,7 @@ blit_lines(SDL_Surface *surface, pompface ui, point offset)
     int x; /* x position */
    
     /* blit lines */
+
     for(i=0;i<LINE_NO;i++) {
         for(x=0;x<surface->w;x+=ui.line->w) {
             pos.x = x;
@@ -79,6 +80,7 @@ button_click(SDL_Event event, SDL_Surface *display, pompface *ui, point offset)
 void
 update_clip(pompface ui, SDL_Rect *clip)
 {
+    /* update the clipping rectangle for the icons */
     if(ui.active > -1) {
         clip->x = ui.icon->h * ui.active;
         clip->y = 0;
@@ -90,20 +92,19 @@ update_clip(pompface ui, SDL_Rect *clip)
 void
 update_pos(SDL_Event event, pompface ui, point offset, SDL_Rect *pos)
 {
-    if(ui.active > BUTTON_NONE) { /* if a button is active */
-        if(event.motion.y > offset.y) {
-            pos->x = (event.motion.x / ui.icon->h) * ui.icon->h;
-            pos->y = (event.motion.y / ui.icon->h) * ui.icon->h;
-            pos->w = ui.icon->h;
-            pos->h = ui.icon->h;
-        }
+    /* update the current position of the mouse cursor */
+    if(event.motion.y > offset.y) { /* if the cursor is in the snap grid zone */
+        pos->x = (event.motion.x / ui.icon->h) * ui.icon->h;
+        pos->y = (event.motion.y / ui.icon->h) * ui.icon->h;
+        pos->w = ui.icon->h;
+        pos->h = ui.icon->h;
+    }
 
-        else {
-            pos->x = event.motion.x;
-            pos->y = event.motion.y;
-            pos->w = ui.icon->h;
-            pos->h = ui.icon->h;
-        }
+    else { /* otherwise current mouse position = current mouse position */
+        pos->x = event.motion.x;
+        pos->y = event.motion.y;
+        pos->w = ui.icon->h;
+        pos->h = ui.icon->h;
     }
 }
 
@@ -139,6 +140,8 @@ init_audio()
     if(Mix_OpenAudio(44100,MIX_DEFAULT_FORMAT,2,512) == 1) {
         fprintf(stderr,"%s\n",Mix_GetError());
     }
+
+    else { Mix_Volume(-1,MIX_MAX_VOLUME); } /* set volume to max */
 }
 
 int
@@ -161,23 +164,25 @@ blit_click(SDL_Surface *surface, pompface ui, SDL_Rect pos, SDL_Rect clip)
 }
 
 void
-play_tune(Mix_Chunk son[], int tempo, node *cur, node *head, int n)
+play_tune(Mix_Chunk *son[], int tempo, tune **cur, tune **head, int n)
 {
-    int time;
+    int time; 
+    /* start at the beginning */
+    time = 0;
+    (*cur) = (*head);
 
-    cur = head;
     while(n != 0) {
-        while(cur->x == time) {
-            Mix_PlayChannel(-1,son[cur->y],0);
-            cur = cur->next;
+        while((*cur)->x == time) {
+            Mix_PlayChannel(-1,son[(*cur)->y],0);
+            (*cur) = (*cur)->next;
             n--;
+            printf("n: %d\n",n);
         }
 
         SDL_Delay(tempo);
-        time++
+        time++;
     }
 }
-
 
 
 

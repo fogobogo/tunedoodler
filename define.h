@@ -12,6 +12,7 @@
 #define MOTION          1
 #define CLICK           1
 #define OK              1
+#define FAIL            0
 
 typedef struct {
     unsigned int x;
@@ -31,11 +32,11 @@ typedef struct {
     int total;
 } pompface;
 
-typedef struct node {
+typedef struct tune {
     unsigned int x;
     unsigned int y;
     int i;
-    struct node *next;
-} node;
+    struct tune *next;
+} tune;
 
 

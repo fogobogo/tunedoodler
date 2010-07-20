@@ -1,28 +1,28 @@
 void
-init_nodes(node **head, node **cur, node **new)
+init_tune(tune **head, tune **cur, tune **new)
 {
-    (*head) = (node *)malloc(sizeof(node));
+    (*head) = (tune *)malloc(sizeof(tune));
     (*head)->next = NULL;
     (*cur) = (*head);
 }
 
 void
-store_node(SDL_Event event, SDL_Surface *display, pompface ui, point offset, node **cur, node **new)
+store_tune(SDL_Event event, SDL_Surface *display, pompface ui, point offset, tune **cur, tune **new)
 {
     (*cur)->x = event.button.x / ui.icon->h;
     (*cur)->y = (event.button.y - offset.y) / ui.icon->h;
     (*cur)->i = ui.active;
 
     printf("cur x: %d\tcur y: %d\n",(*cur)->x,(*cur)->y);
-    (*new) = (node *)malloc(sizeof(node));
+    (*new) = (tune *)malloc(sizeof(tune));
     (*new)->next = NULL;
-    /* link nodes */
+    /* link tunes */
     (*cur)->next = (*new);
     (*cur) = (*new);
 }
 
 void
-free_nodes(node **head, node **cur)
+free_tune(tune **head, tune **cur)
 {
     (*cur) = (*head);
     while((*cur)->next != NULL) {
@@ -33,7 +33,7 @@ free_nodes(node **head, node **cur)
 }
 
 void
-print_nodes(node **head, node **cur)
+print_tune(tune **head, tune **cur)
 {
     (*cur) = (*head);
     while((*cur)->next != NULL) {
@@ -42,11 +42,11 @@ print_nodes(node **head, node **cur)
     }
 }
 
-node*
-merge_nodes(node *left, node *right)
+tune*
+merge_tune(tune *left, tune *right)
 {
-    node *sort;
-    node *cur;
+    tune *sort;
+    tune *cur;
 
     /* if either linked list is empty return the other */
     if(left == NULL) { return(right); }
@@ -56,7 +56,7 @@ merge_nodes(node *left, node *right)
     /* [comparsion starts here.] */
     if(left->x <= right->x) {
         sort  = left;
-        /* move to next node */
+        /* move to next tune */
         left = left->next;
     }
 
@@ -66,7 +66,7 @@ merge_nodes(node *left, node *right)
     } 
     /* [comparsion ends here] */
 
-    /* since sort is now the first node of the list with the sorted nodes.. */
+    /* since sort is now the first tune of the list with the sorted tunes.. */
     sort->next = NULL;
     cur = sort;
 
@@ -90,7 +90,7 @@ merge_nodes(node *left, node *right)
         cur->next = NULL;
     }
 
-    /* if either half ran out of nodes before the other do this */
+    /* if either half ran out of tunes before the other do this */
     if(left != NULL) { cur->next = left; }
     if(right != NULL) { cur->next = right; }
 
@@ -100,16 +100,16 @@ merge_nodes(node *left, node *right)
 }
 
 
-node*
-msort_nodes(node *head, int n)
+tune*
+msort_tune(tune *head, int n)
 {
     int i;
-    node *left;
-    node *right;
+    tune *left;
+    tune *right;
 
-    node *tail;
+    tune *tail;
 
-    /* count the total number of nodes */
+    /* count the total number of tunes */
     /*
     while(head->next != NULL) {
         n++;
@@ -118,29 +118,29 @@ msort_nodes(node *head, int n)
     */
 
 
-    /* stop splitting up nodes if theres only one... */
+    /* stop splitting up tunes if theres only one... */
     if(n > 1) {
 
-        /* split the nodes in half  */
+        /* split the tunes in half  */
         /* first left... */
         left = head;
 
-        /* move to the node in the middle */
+        /* move to the tune in the middle */
         tail = head;
         for(i=0;i<((n/2) - 1);i++) {
             tail = tail->next;
         }
-        /* the next node will be the start of the second half */
+        /* the next tune will be the start of the second half */
         right = tail->next;
         /* now unlink both halfs from each other */
         tail->next = NULL;
 
         /* now do this over and over again with recursion */
         /* at least until we hit the condition of the if statement */
-        left = msort_nodes(left,(n/2));
-        right = msort_nodes(right,(n - (n/2)));
+        left = msort_tune(left,(n/2));
+        right = msort_tune(right,(n - (n/2)));
 
-        head = merge_nodes(left,right);
+        head = merge_tune(left,right);
 
     }
 
@@ -148,13 +148,29 @@ msort_nodes(node *head, int n)
 }
 
 
+void
+delete_tune(int *n, tune **head, tune **cur, point offset, SDL_Rect pos)
+{
+    tune *prev;
+    int i = 0;
+    
+    printf("** %d %d\n",pos.x / 32,(pos.y - offset.y) / 32);
 
+    (*cur) = (*head);
+    while((*cur)->next != NULL) {
 
-
-
-
-
-
-
-
+        if((*cur)->x == (pos.x / 32)
+        && (*cur)->y == ((pos.y - offset.y) / 32)) {
+            prev->next = (*cur)->next;
+            free((*cur));
+            printf("removed tune %d\n",i);
+            (*n)--;
+        }
+        else {
+            prev = (*cur);
+            (*cur) = (*cur)->next;
+        }
+        i++;
+    }
+}
 

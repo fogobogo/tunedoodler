@@ -28,8 +28,9 @@ int main (int argc, char *argv[])
     int loop = 1;
     int blit = 0;
 
-    int n = 0; /* node counter */
+    int click;
 
+    int n = 0; /* node counter */
     int i = 0; /* general purpose iterator */
 
     char *instrument[] = { INSTRUMENTA, NULL };
@@ -40,22 +41,23 @@ int main (int argc, char *argv[])
     point margin;
 
 
-    node *head;
-    node *cur;
-    node *new;
+    tune *head;
+    tune *cur;
+    tune *new;
 
 
     SDL_Rect pos;
     SDL_Rect clip;
 
     atexit(SDL_Quit);
+    atexit(Mix_CloseAudio);
 
     /* let's go */
     display = init_sdl(SCREEN_WIDTH, SCREEN_HEIGHT); /* init sdl */
     background = init_background(SCREEN_WIDTH,SCREEN_HEIGHT,BACKGROUND); /* init background */
 
     init_ui(&ui);
-    init_nodes(&head,&cur,&new);
+    init_tune(&head,&cur,&new);
 
     init_total(display,&ui);
     init_offsets(display,ui,&offset);
@@ -69,12 +71,11 @@ int main (int argc, char *argv[])
     blit_lines(background,ui,offset);
     blit_buttons(background,ui,offset);
     blit_icons(background,ui,offset,margin);
+
     SDL_BlitSurface(background,NULL,display,NULL);
     SDL_UpdateRect(display,0,0,0,0);
-    
-    Mix_Volume(-1,MIX_MAX_VOLUME);
-
-    
+   
+    /* MAIN LOOP */
     while(loop) {
 		/* get ticks for FPS calculation */
 		frame = SDL_GetTicks();
@@ -92,16 +93,14 @@ int main (int argc, char *argv[])
                             ui.active = BUTTON_NONE;
                             update_pos(event,ui,offset,&pos);
                             update_display(background,display,pos);
-                            head = msort_nodes(head,n);
-                            play_tune(son,TEMPO,cur,head,n);
+                            head = msort_tune(head,n);
+                            play_tune(son,TEMPO,&cur,&head,n);
+                            printf("n: %d\n",n);
                             break;
                         case SDLK_s:
-                            head = msort_nodes(head,n);
+                            head = msort_tune(head,n);
                             cur = head;
-                            while(cur->next != NULL) {
-                                printf("x: %d\n",cur->x);
-                                cur = cur->next;
-                            }
+                            print_tune(&head,&cur);
                             break;
 					}
                 /* mouse button handling */
@@ -111,10 +110,10 @@ int main (int argc, char *argv[])
                             button_click(event,display,&ui,offset);
                             update_clip(ui,&clip);
                             if(check_bounds(event,display,ui,offset) == OK) {
-                                store_node(event,display,ui,offset,&cur,&new);
+                                store_tune(event,display,ui,offset,&cur,&new);
                                 n++;
                                 update_pos(event,ui,offset,&pos);
-                                blit_click(background,ui,pos,clip);
+                                blit_click(display,ui,pos,clip);
                             }
                             printf("#: %d\n",ui.active);
                             printf("nodes: %d\n",n);
@@ -123,6 +122,8 @@ int main (int argc, char *argv[])
                             /* set button to none on right click */
                             ui.active = BUTTON_NONE;
                             update_display(background,display,pos);
+                            update_pos(event,ui,offset,&pos);
+                            delete_tune(&n,&head,&cur,offset,pos);
                             printf("#: %d\n",ui.active);
                             break;
                     }
@@ -164,8 +165,8 @@ int main (int argc, char *argv[])
 		}
 
 
-	/*main loop ends here. */
 	}
+    /*main loop ends here. */
 
     cur = head;
     while(cur->next != NULL) {
@@ -174,7 +175,7 @@ int main (int argc, char *argv[])
     }
 
     printf("cleaning up... ");
-    free_nodes(&head,&cur);
+    free_tune(&head,&cur);
     /* offload ui */
     SDL_FreeSurface(ui.line);
     SDL_FreeSurface(ui.button);
@@ -189,13 +190,15 @@ int main (int argc, char *argv[])
     SDL_FreeSurface(overlay); 
     */
     SDL_FreeSurface(display);
-    for(i=0;i<8;i++) {
+    /* offload instrument samples */
+    for(i=0;i<10;i++) {
        Mix_FreeChunk(son[i]); 
     }
 
     Mix_CloseAudio();
-    printf("done.\n");
     SDL_Quit();
+    printf("done.\n");
+
     return(0);
 
 }
