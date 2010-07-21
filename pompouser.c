@@ -113,7 +113,7 @@ int main (int argc, char *argv[])
                                 store_tune(event,display,ui,offset,&cur,&new);
                                 n++;
                                 update_pos(event,ui,offset,&pos);
-                                blit_click(display,ui,pos,clip);
+                                blit_click(background,ui,pos,clip);
                             }
                             printf("#: %d\n",ui.active);
                             printf("nodes: %d\n",n);

@@ -27,9 +27,9 @@ typedef struct {
     /* SDL_Surface *icon_pressed = NULL; */
     SDL_Surface *play;
     /* SDL_Surface *play_pressed; */
-    int active;
+    int active; /* active button */
     int before;
-    int total;
+    int total; /* total number of buttons */
 } pompface;
 
 typedef struct tune {

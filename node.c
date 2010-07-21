@@ -161,6 +161,8 @@ delete_tune(int *n, tune **head, tune **cur, point offset, SDL_Rect pos)
 
         if((*cur)->x == (pos.x / 32)
         && (*cur)->y == ((pos.y - offset.y) / 32)) {
+
+            /* TODO: handle exception in case first node will be deleted */
             prev->next = (*cur)->next;
             free((*cur));
             printf("removed tune %d\n",i);
