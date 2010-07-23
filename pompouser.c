@@ -6,7 +6,6 @@
 #include "config.h"
 #include "sdl.c"
 #include "init.c"
-#include "node.c"
 #include "pompcore.c"
 #include "tune.c"
 
@@ -26,15 +25,17 @@ int main (int argc, char *argv[])
 
     Uint32 frame; /* holds frame time */
     int loop = 1;
+    int loop_tune = 0;
     int blit = 0;
 
     int click;
 
     int n = 0; /* node counter */
-    int i = 0; /* general purpose iterator */
+    int i,o = 0; /* general purpose iterator */
 
-    char *instrument[] = { INSTRUMENTA, NULL };
-    Mix_Chunk *son[10];
+    char *instrumenta[] = { INSTRUMENTA, NULL };
+    char *instrumentb[] = { INSTRUMENTB, NULL };
+    Mix_Chunk *son[10][2];
 
     pompface    ui; /* user interface resources. */
     point offset;
@@ -47,6 +48,7 @@ int main (int argc, char *argv[])
 
 
     SDL_Rect pos;
+    SDL_Rect rel;
     SDL_Rect clip;
 
     atexit(SDL_Quit);
@@ -65,7 +67,8 @@ int main (int argc, char *argv[])
 
     init_audio();
     for(i=0;i<10;i++) {
-        son[i] = Mix_LoadWAV(instrument[i]);
+        son[i][0] = Mix_LoadWAV(instrumenta[i]);
+        son[i][1] = Mix_LoadWAV(instrumentb[i]);
     }
 
     blit_lines(background,ui,offset);
@@ -86,14 +89,25 @@ int main (int argc, char *argv[])
 				/* keyboard handling */
 				case SDL_KEYDOWN:
 					switch(event.key.keysym.sym) {
+                        case SDLK_DOWN:
+                            printf("down\n");
+                            printf("pos x: %d y: %d\n",pos.x, pos.y);
+                            pos.x += ui.icon->h;
+                            printf("pos x: %d y: %d\n",pos.x, pos.y);
+                            blit_click(background,ui,pos,clip);
+                            break;
 						case SDLK_q:
 							loop = 0;
 							break;
                         case SDLK_p:
+                            /* set the active button to none */
                             ui.active = BUTTON_NONE;
-                            update_pos(event,ui,offset,&pos);
+                            printf("ui.active: %d\n",ui.active);
+                            /* trigger a blit to get it actually disappear on the screen */
                             update_display(background,display,pos);
+                            /* sort all nodes so they can be played in order */
                             head = msort_tune(head,n);
+                            /* play them! */
                             play_tune(son,TEMPO,&cur,&head,n);
                             printf("n: %d\n",n);
                             break;
@@ -102,17 +116,43 @@ int main (int argc, char *argv[])
                             cur = head;
                             print_tune(&head,&cur);
                             break;
+                        case SDLK_l:
+                            if(loop_tune == 0) {
+                                loop_tune = 1;
+                            }
+                            else { loop_tune = 0; }
+                            ui.active = BUTTON_NONE;
+                            update_display(background,display,pos);
+                            head = msort_tune(head,n);
+                            printf("loop: %d\n",loop_tune);
+                            break;
+                        case SDLK_F5:
+                            head = msort_tune(head,n);
+                            save_tune(&head,&cur);
+                            break;
+                        default:
+                            break;
 					}
+                    break; /* prevent falling through */
+
                 /* mouse button handling */
                 case SDL_MOUSEBUTTONDOWN:
                     switch(event.button.button) {
                         case SDL_BUTTON_LEFT:
+                            /* find out if a button was clicked and set the active button to it */
                             button_click(event,display,&ui,offset);
+                            /* update the clipping rectangle for the icon. but only if the active button isn't none */
                             update_clip(ui,&clip);
+                            /* check if the current positon is in the snap grid zone */
                             if(check_bounds(event,display,ui,offset) == OK) {
-                                store_tune(event,display,ui,offset,&cur,&new);
-                                n++;
                                 update_pos(event,ui,offset,&pos);
+                                update_rel(event,ui,offset,&rel);
+                                /* initalize the members of the current node with the relative values */
+                                store_tune(&cur, rel.x, rel.y, ui.active);
+                                /* create the next node */
+                                create_tune(&cur,&new);
+                                n++;
+                                /* make the button click actually appear on screen */
                                 blit_click(background,ui,pos,clip);
                             }
                             printf("#: %d\n",ui.active);
@@ -122,9 +162,10 @@ int main (int argc, char *argv[])
                             /* set button to none on right click */
                             ui.active = BUTTON_NONE;
                             update_display(background,display,pos);
-                            update_pos(event,ui,offset,&pos);
-                            delete_tune(&n,&head,&cur,offset,pos);
+                            delete_tune(rel.x, rel.y, &n,&head,&cur);
                             printf("#: %d\n",ui.active);
+                            break;
+                        default:
                             break;
                     }
                 /* mouse motion handling */
@@ -147,7 +188,7 @@ int main (int argc, char *argv[])
 					break;
 
                 case SDL_VIDEORESIZE:
-                    printf("todo: resize");
+                    /* TODO: handle resizes */
                     break;
 			}
 
@@ -163,6 +204,10 @@ int main (int argc, char *argv[])
 		if(frame < 1000/FRAMERATE) {
 			SDL_Delay((1000/FRAMERATE) - frame);
 		}
+
+        if(loop_tune == 1) {
+            play_tune(son,TEMPO,&cur,&head,n);
+        }
 
 
 	}
@@ -191,8 +236,10 @@ int main (int argc, char *argv[])
     */
     SDL_FreeSurface(display);
     /* offload instrument samples */
+    for(o=0;o<2;o++) {
     for(i=0;i<10;i++) {
-       Mix_FreeChunk(son[i]); 
+       Mix_FreeChunk(son[i][o]); 
+    }
     }
 
     Mix_CloseAudio();

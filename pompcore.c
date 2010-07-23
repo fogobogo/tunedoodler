@@ -64,7 +64,7 @@ blit_lines(SDL_Surface *surface, pompface ui, point offset)
     }
 }
 
-
+/* kind of bad. consider replacing it with an SDL_Rect array */
 void
 button_click(SDL_Event event, SDL_Surface *display, pompface *ui, point offset)
 {
@@ -77,11 +77,12 @@ button_click(SDL_Event event, SDL_Surface *display, pompface *ui, point offset)
 
 }
 
+/* update the clipping rectangle for the icons */
 void
 update_clip(pompface ui, SDL_Rect *clip)
 {
     /* update the clipping rectangle for the icons */
-    if(ui.active > -1) {
+    if(ui.active > BUTTON_NONE) {
         clip->x = ui.icon->h * ui.active;
         clip->y = 0;
         clip->w = ui.icon->h;
@@ -89,6 +90,7 @@ update_clip(pompface ui, SDL_Rect *clip)
     }
 }
 
+/* get the current absolute position */
 void
 update_pos(SDL_Event event, pompface ui, point offset, SDL_Rect *pos)
 {
@@ -108,6 +110,7 @@ update_pos(SDL_Event event, pompface ui, point offset, SDL_Rect *pos)
     }
 }
 
+/* blit the icon on the currrent position */
 void
 blit_cursor(SDL_Surface *display, SDL_Rect pos, SDL_Rect clip, pompface ui)
 {
@@ -148,9 +151,9 @@ int
 check_bounds(SDL_Event event, SDL_Surface *display, pompface ui, point offset)
 {
     if(((event.button.y > offset.y) 
-       && (ui.active >  -1))
+       && (ui.active >  BUTTON_NONE))
        || ((event.button.y > display->h - offset.y) 
-       && (ui.active >  -1))) {
+       && (ui.active >  BUTTON_NONE))) {
 
         return(OK);
     }
@@ -164,7 +167,7 @@ blit_click(SDL_Surface *surface, pompface ui, SDL_Rect pos, SDL_Rect clip)
 }
 
 void
-play_tune(Mix_Chunk *son[], int tempo, tune **cur, tune **head, int n)
+play_tune(Mix_Chunk *son[][2], int tempo, tune **cur, tune **head, int n)
 {
     int time; 
     /* start at the beginning */
@@ -173,7 +176,7 @@ play_tune(Mix_Chunk *son[], int tempo, tune **cur, tune **head, int n)
 
     while(n != 0) {
         while((*cur)->x == time) {
-            Mix_PlayChannel(-1,son[(*cur)->y],0);
+            Mix_PlayChannel(-1,son[(*cur)->y][(*cur)->i],0);
             (*cur) = (*cur)->next;
             n--;
             printf("n: %d\n",n);
@@ -184,5 +187,9 @@ play_tune(Mix_Chunk *son[], int tempo, tune **cur, tune **head, int n)
     }
 }
 
-
-
+void
+update_rel(SDL_Event event, pompface ui, point offset, SDL_Rect *rel)
+{
+    rel->x = event.button.x / ui.icon->h;
+    rel->y = (event.button.y - offset.y) / ui.icon->h;
+}

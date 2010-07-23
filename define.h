@@ -24,7 +24,7 @@ typedef struct {
     SDL_Surface *button;
     SDL_Surface *button_pressed;
     SDL_Surface *icon;
-    /* SDL_Surface *icon_pressed = NULL; */
+    /* SDL_Surface *icon_pressed */
     SDL_Surface *play;
     /* SDL_Surface *play_pressed; */
     int active; /* active button */
