@@ -1,16 +1,16 @@
 
-/* create first node of the linked list */
+/* create first node */
 void
-init_tune(tune **head, tune **cur, tune **new)
+init_tune(tune_t **head, tune_t **cur, tune_t **new)
 {
-    (*head) = (tune *)malloc(sizeof(tune));
+    (*head) = (tune_t *)malloc(sizeof(tune_t));
     (*head)->next = NULL;
     (*cur) = (*head);
 }
 
-/* initialize the members of the node struct */
+/* save to the members of the node struct */
 void
-store_tune(tune **cur, int x, int y, int i)
+store_tune(tune_t **cur, int x, int y, int i)
 {
     if(i > BUTTON_NONE) {
         (*cur)->x = x;
@@ -21,9 +21,9 @@ store_tune(tune **cur, int x, int y, int i)
 
 /* create a new node */
 void
-create_tune(tune **cur, tune **new)
+create_tune(tune_t **cur, tune_t **new)
 {
-    (*new) = (tune *)malloc(sizeof(tune));
+    (*new) = (tune_t *)malloc(sizeof(tune_t));
     (*new)->next = NULL;
     /* link nodes */
     (*cur)->next = (*new);
@@ -32,7 +32,7 @@ create_tune(tune **cur, tune **new)
 
 /* free all nodes */
 void
-free_tune(tune **head, tune **cur)
+free_tune(tune_t **head, tune_t **cur)
 {
     (*cur) = (*head);
     while((*cur)->next != NULL) {
@@ -44,7 +44,7 @@ free_tune(tune **head, tune **cur)
 
 /* print all nodes and the values of its members */
 void
-print_tune(tune **head, tune **cur)
+print_tune(tune_t **head, tune_t **cur)
 {
     (*cur) = (*head);
     while((*cur)->next != NULL) {
@@ -56,16 +56,17 @@ print_tune(tune **head, tune **cur)
 
 /* TODO: add removal of dupes */
 /* what a beast */
-tune*
-merge_tune(tune *left, tune *right)
+tune_t*
+merge_tune(tune_t *left, tune_t *right)
 {
-    tune *sort;
-    tune *cur;
+    tune_t *sort;
+    tune_t *cur;
 
-    /* if either linked list is empty return the other */
+    /* if either half of the list is empty return the other */
     if(left == NULL) { return(right); }
     if(right == NULL) { return(left); }
 
+    /* TODO: make function of this ? */
     /* compare both halfs that were given as argument */
     /* [comparsion starts here.] */
     if(left->x <= right->x) {
@@ -113,15 +114,15 @@ merge_tune(tune *left, tune *right)
 
 }
 
-/* mergesort nodes */
-tune*
-msort_tune(tune *head, int n)
+/* perform mergesort on nodes */
+tune_t*
+msort_tune(tune_t *head, int n)
 {
     int i;
-    tune *left;
-    tune *right;
+    tune_t *left;
+    tune_t *right;
 
-    tune *tail;
+    tune_t *tail;
 
     /* count the total number of tunes */
     /*
@@ -144,6 +145,7 @@ msort_tune(tune *head, int n)
         for(i=0;i<((n/2) - 1);i++) {
             tail = tail->next;
         }
+        /* ...then right */
         /* the next node will be the start of the second half */
         right = tail->next;
         /* now unlink both halfs from each other */
@@ -163,9 +165,9 @@ msort_tune(tune *head, int n)
 
 /* remove a node */
 void
-delete_tune(int rx, int ry, int *n, tune **head, tune **cur)
+delete_tune(int rx, int ry, int *n, tune_t **head, tune_t **cur)
 {
-    tune *prev;
+    tune_t *prev;
     int i = 0;
     
     (*cur) = (*head);
@@ -190,7 +192,7 @@ delete_tune(int rx, int ry, int *n, tune **head, tune **cur)
 
 /* write members of the linked list to a file */
 void
-save_tune(tune **head, tune **cur)
+save_tune(tune_t **head, tune_t **cur)
 {
     FILE *fd;
 
@@ -206,7 +208,7 @@ save_tune(tune **head, tune **cur)
 }
 
 void
-load_tune(tune **head, tune **cur)
+load_tune(tune_t **head, tune_t **cur)
 {
     FILE *fd;
 

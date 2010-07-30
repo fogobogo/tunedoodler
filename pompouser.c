@@ -7,19 +7,26 @@
 #include "sdl.c"
 #include "init.c"
 #include "pompcore.c"
+#include "blit.c"
+#include "update.c"
+#include "audio.c"
 #include "tune.c"
 
 /* TODO: removal of dupes */
 /* TODO: seperate ui from core code */
 /* TODO: proper loading routine */
 /* TODO: removal of nodes */
+/* TODO: find a better way to organise the functions */
+/* TODO: seperate event loop to a event.c */
+
+/* TODO TODO TODO: ERROR CHECKING!!!!! */
 
 int main (int argc, char *argv[])
 {
     SDL_Surface *display;
     SDL_Surface *background;
-    SDL_Surface *lines;
-    SDL_Surface *overlay;
+
+    SDL_AudioSpec *audio;
 
     SDL_Event event;
 
@@ -28,23 +35,22 @@ int main (int argc, char *argv[])
     int loop_tune = 0;
     int blit = 0;
 
-    int click;
+    float pitch = 0.0;
+    float vol = 1.0;
+
 
     int n = 0; /* node counter */
-    int i,o = 0; /* general purpose iterator */
 
-    char *instrumenta[] = { INSTRUMENTA, NULL };
-    char *instrumentb[] = { INSTRUMENTB, NULL };
-    Mix_Chunk *son[10][2];
+    sound_t sounds[1];
 
     pompface    ui; /* user interface resources. */
     point offset;
     point margin;
 
 
-    tune *head;
-    tune *cur;
-    tune *new;
+    tune_t *head;
+    tune_t *cur;
+    tune_t *new;
 
 
     SDL_Rect pos;
@@ -52,7 +58,6 @@ int main (int argc, char *argv[])
     SDL_Rect clip;
 
     atexit(SDL_Quit);
-    atexit(Mix_CloseAudio);
 
     /* let's go */
     display = init_sdl(SCREEN_WIDTH, SCREEN_HEIGHT); /* init sdl */
@@ -65,10 +70,19 @@ int main (int argc, char *argv[])
     init_offsets(display,ui,&offset);
     init_margins(ui,&margin);
 
-    init_audio();
-    for(i=0;i<10;i++) {
-        son[i][0] = Mix_LoadWAV(instrumenta[i]);
-        son[i][1] = Mix_LoadWAV(instrumentb[i]);
+    init_audio(&audio);
+    sounds[0].data = NULL;
+    load_audio(&audio,&sounds[0]);
+    /* SDL_LoadWAV("default/808-bassdrum.wav",audio,&sounds[0].data,&sounds[0].length); */
+    if(sounds[0].data == NULL) {
+        printf("ouch. no sound.\n");
+    }
+
+
+    SDL_Delay(300);
+    process_audio(&voice[0],&sounds[0],2.0,2.0,3.0);
+    if(voice[0].data == NULL) {
+        printf("ouch.\n");
     }
 
     blit_lines(background,ui,offset);
@@ -89,13 +103,28 @@ int main (int argc, char *argv[])
 				/* keyboard handling */
 				case SDL_KEYDOWN:
 					switch(event.key.keysym.sym) {
+                        /* TODO get rid of this mess */
                         case SDLK_DOWN:
-                            printf("down\n");
-                            printf("pos x: %d y: %d\n",pos.x, pos.y);
-                            pos.x += ui.icon->h;
-                            printf("pos x: %d y: %d\n",pos.x, pos.y);
-                            blit_click(background,ui,pos,clip);
+                            pitch -= 1.0;
+                            process_audio(&voice[0],&sounds[0],vol,vol,pitch);
+                            SDL_Delay(200);
                             break;
+                        case SDLK_UP:
+                            pitch += 1.0;
+                            process_audio(&voice[0],&sounds[0],vol,vol,pitch);
+                            SDL_Delay(200);
+                            break;
+                        case SDLK_LEFT:
+                            update_display(background,display,pos);
+                            pos.x -= ui.icon->h;
+                            blit_click(display,ui,pos,clip);
+                            break;
+                        case SDLK_RIGHT:
+                            update_display(background,display,pos);
+                            pos.x += ui.icon->h;
+                            blit_click(display,ui,pos,clip);
+                            break;
+
 						case SDLK_q:
 							loop = 0;
 							break;
@@ -108,7 +137,6 @@ int main (int argc, char *argv[])
                             /* sort all nodes so they can be played in order */
                             head = msort_tune(head,n);
                             /* play them! */
-                            play_tune(son,TEMPO,&cur,&head,n);
                             printf("n: %d\n",n);
                             break;
                         case SDLK_s:
@@ -205,11 +233,6 @@ int main (int argc, char *argv[])
 			SDL_Delay((1000/FRAMERATE) - frame);
 		}
 
-        if(loop_tune == 1) {
-            play_tune(son,TEMPO,&cur,&head,n);
-        }
-
-
 	}
     /*main loop ends here. */
 
@@ -221,6 +244,7 @@ int main (int argc, char *argv[])
 
     printf("cleaning up... ");
     free_tune(&head,&cur);
+    free_audio(&audio);
     /* offload ui */
     SDL_FreeSurface(ui.line);
     SDL_FreeSurface(ui.button);
@@ -235,14 +259,8 @@ int main (int argc, char *argv[])
     SDL_FreeSurface(overlay); 
     */
     SDL_FreeSurface(display);
-    /* offload instrument samples */
-    for(o=0;o<2;o++) {
-    for(i=0;i<10;i++) {
-       Mix_FreeChunk(son[i][o]); 
-    }
-    }
+    SDL_FreeWAV(sounds[0].data);
 
-    Mix_CloseAudio();
     SDL_Quit();
     printf("done.\n");
 
