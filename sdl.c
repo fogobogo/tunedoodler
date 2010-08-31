@@ -27,9 +27,19 @@ init_sdl(unsigned int screen_width, unsigned int screen_height)
 	}
 }
 
+/* create background with color */
+SDL_Surface*
+init_background(unsigned int w, unsigned int h, unsigned char r, unsigned char g, unsigned char b)
+{
+    SDL_Surface *tmp;
+    tmp = SDL_CreateRGBSurface(SDL_FLAGS,w,h,DEPTH,0,0,0,0);
+    SDL_FillRect(tmp,NULL,SDL_MapRGB(tmp->format,r,b,g));
+    return(tmp);
+}
 
 SDL_Surface* 
-load_image(const char *filename) {
+load_image(const char *filename)
+{
 	SDL_Surface *tmp;
 	SDL_Surface *surface;
 
@@ -55,7 +65,8 @@ load_image(const char *filename) {
 
 /* set the whole surface to a defined colour */
 void 
-set_colour(SDL_Surface *dst, int r, int g, int b) {
+set_colour(SDL_Surface *dst, int r, int g, int b) 
+{
 	Uint32 color;
 	color = SDL_MapRGB(dst->format,r,g,b);
 	SDL_FillRect(dst,NULL,color);

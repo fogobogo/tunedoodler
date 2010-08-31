@@ -1,17 +1,6 @@
-
-/* create background with color */
-SDL_Surface*
-init_background(unsigned int w, unsigned int h, unsigned char r, unsigned char g, unsigned char b)
-{
-    SDL_Surface *tmp;
-    tmp = SDL_CreateRGBSurface(SDL_FLAGS,w,h,DEPTH,0,0,0,0);
-    SDL_FillRect(tmp,NULL,SDL_MapRGB(tmp->format,r,b,g));
-    return(tmp);
-}
-    
-    
+/* load images, set button to none */ 
 void
-init_ui(pompface *ui)
+init_ui(theme_t *ui, button_t *b)
 {
     /* load images */
     ui->button = load_image(BUTTON);
@@ -21,13 +10,13 @@ init_ui(pompface *ui)
     ui->line = load_image(LINE);
 
     /* set active button to none */
-    ui->active = BUTTON_NONE;
-    ui->before = BUTTON_NONE;
+    b->active = BUTTON_NONE;
+    b->before = BUTTON_NONE;
 }
 
-
+/* find out how much icons we have and how many buttons fit in the window */
 void
-init_total(SDL_Surface *display, pompface *ui)
+init_total(SDL_Surface *display, theme_t *ui, button_t *b)
 {
     int buttons, icons; /* buttons, icons */
 
@@ -36,26 +25,31 @@ init_total(SDL_Surface *display, pompface *ui)
     icons = ui->icon->w / ui->icon->h; 
 
     /* if there are less icons than buttons that fit on the screen blit only as many buttons as there are icons */
-    if(buttons > icons) { ui->total = icons; }
+    if(buttons > icons) { b->total = icons; }
     /* else blit as many buttons as possible which means there will be some icons hidden (or match the button number) */
-    else { ui->total = buttons; }
+    else { b->total = buttons; }
 }
 
 void
-init_offsets(SDL_Surface *display, pompface ui, point *offset)
+init_offsets(SDL_Surface *display, theme_t ui, metric_t *m, button_t b)
 {
-    /* calculate the horizontal offset (left, right) relative to the window so the buttons are always centered on the screen */
     /* store the values so we can later figure out what button was pressed */
-    offset->x = ((display->w - ui.play->w) - (ui.button->w * ui.total)) / 2; /* from left */
-    offset->y = (display->h - (ui.icon->h * (LINE_NO * 2))) / 2 + (ui.icon->h / 2);
-    printf("xoff: %d\n",offset->x);
-    printf("yoff: %d\n",offset->y);
+    /* calculate the horizontal offset (left, right) relative to the window so the buttons are always centered on the screen */
+    m->xoff = ((display->w - ui.play->w) - (ui.button->w * b.total)) / 2; /* from left */
+    m->yoff = (display->h - (ui.icon->h * LINE_NO * 2)) / 2;
+	/* needed for proper alignment */
+	/* check if the result is odd / even and add a little offset to properly align the lines with the icons */
+	if((m->yoff / ui.icon->h) % 2 == 0) {
+		m->yoff += (ui.icon->h / 2);
+	}
+    printf("xoff: %d\n",m->xoff);
+    printf("yoff: %d\n",m->yoff);
 }
 
 void
-init_margins(pompface ui, point *margin)
+init_margins(theme_t ui, metric_t *m)
 {
     /* to center icons on buttons */
-    margin->x = (ui.button->w - ui.icon->h) / 2;
-    margin->y = (ui.button->h - ui.icon->h) / 2;
+    m->xm = (ui.button->w - ui.icon->h) / 2;
+    m->ym = (ui.button->h - ui.icon->h) / 2;
 }

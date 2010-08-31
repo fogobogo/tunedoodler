@@ -14,13 +14,9 @@
 #define CLICK           1
 #define OK              1
 #define FAIL            0
+#define NOTHING			0
 
-typedef struct {
-    unsigned int x;
-    unsigned int y;
-} point;
-
-
+/* interface struct. holds pointers to the user interface images and their metrics */
 typedef struct {
     SDL_Surface *line;
     SDL_Surface *button;
@@ -29,11 +25,22 @@ typedef struct {
     /* SDL_Surface *icon_pressed */
     SDL_Surface *play;
     /* SDL_Surface *play_pressed; */
-    int active; /* active button */
-    int before;
-    int total; /* total number of buttons */
-} pompface;
+} theme_t;
 
+/* metrics struct. holds values of various offsets to place user interface elements at the right spot on the screen */
+typedef struct {
+    unsigned int xoff;  /* horizontal offset */
+    unsigned int yoff;  /* vertical offset */
+    unsigned int xm;    /* horizontal margin */
+    unsigned int ym;    /* vertical margin */
+} metric_t;
+
+/* button struct to keep track of the various button states */
+typedef struct {
+    int active;         /* active button */
+    int before; 
+    int total;          /* total number of buttons */
+} button_t;
 
 typedef struct tune_t {
     unsigned int x;
@@ -54,9 +61,9 @@ typedef struct {
     int length;
     int pos;
     float f_pos; /* pos casted as float */
-    int r_vol;
-    int l_vol;
+	int vol;
     float pitch;
 } voice_t;
 
-    voice_t voice[1];
+/* playback channels. global variable */
+voice_t voice[10];

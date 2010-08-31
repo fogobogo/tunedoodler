@@ -10,12 +10,13 @@ init_tune(tune_t **head, tune_t **cur, tune_t **new)
 
 /* save to the members of the node struct */
 void
-store_tune(tune_t **cur, int x, int y, int i)
+store_tune(tune_t **cur, int x, int y, int i, int yoff)
 {
     if(i > BUTTON_NONE) {
         (*cur)->x = x;
         (*cur)->y = y;
         (*cur)->i = i;
+        printf("x: %d y: %d i: %d\n",x,y,i);
     }
 }
 
@@ -165,7 +166,7 @@ msort_tune(tune_t *head, int n)
 
 /* remove a node */
 void
-delete_tune(int rx, int ry, int *n, tune_t **head, tune_t **cur)
+delete_tune(tune_t **head, tune_t **cur, int *n, int rx, int ry)
 {
     tune_t *prev;
     int i = 0;
@@ -214,4 +215,37 @@ load_tune(tune_t **head, tune_t **cur)
 
     fd = fopen("save.tune","r");
     fclose(fd);
+}
+
+
+void
+play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
+{
+    int pos; /* position */
+   	float pitch;
+
+    /* start at the beginning */
+    pos = 0;
+    cur = head;
+
+    while(n != 0) {
+        while(cur->x == pos) {
+            /* PLAY ROUTINE COMES HERE */
+			pitch = ((float)(cur->y) - 10) * (-0.5);
+			printf("pitch: %.2f\n",pitch);
+            process_audio(&voice[cur->y],&sounds[cur->i],1,pitch);
+
+            cur = cur->next;
+            n--; /* count down nodes */
+            printf("n: %d\n",n);
+        }
+
+        SDL_Delay(tempo);
+        pos++;
+    }
+}
+
+void
+paginate_tune(tune_t *head, tune_t *cur, int page)
+{
 }
