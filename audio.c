@@ -103,10 +103,10 @@ init_audio(SDL_AudioSpec **audio)
 void
 load_audio(SDL_AudioSpec **audio, sound_t *sound)
 {
-    SDL_LoadWAV("default/file_complete.wav",(*audio),&sound[0].data,&sound[0].length);
-    SDL_LoadWAV("default/808-cowbell.wav",(*audio),&sound[1].data,&sound[1].length);
-    SDL_LoadWAV("default/808-clap.wav",(*audio),&sound[2].data,&sound[2].length);
-    SDL_LoadWAV("default/808-hihat.wav",(*audio),&sound[3].data,&sound[3].length);
+    SDL_LoadWAV("default/bass.wav",(*audio),&sound[0].data,&sound[0].length);
+    SDL_LoadWAV("default/cowbell.wav",(*audio),&sound[1].data,&sound[1].length);
+    SDL_LoadWAV("default/ding.wav",(*audio),&sound[2].data,&sound[2].length);
+    SDL_LoadWAV("default/flutter.wav",(*audio),&sound[3].data,&sound[3].length);
 }
 
 void

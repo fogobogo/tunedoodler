@@ -12,9 +12,9 @@
 
 #define TEMPO           120
 
-#define SET             "default/filecomplete.wav", "default/808-cowbell.wav", "default/808-clap.wav", NULL
+#define SET             "default/bass.wav", "default/cowbell.wav", "default/ding.wav", "default/flutter.wav", "default/strings.wav", NULL
 
-#define FONT			"default/Unknown-12x12.bmp"
-#define FONT_WIDTH		18
+#define FONT			"default/font14x18.bmp"
+#define FONT_WIDTH		14
 #define FONT_HEIGHT		18
 

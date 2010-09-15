@@ -6,7 +6,7 @@
 #define SDL_INIT    SDL_INIT_VIDEO|SDL_INIT_AUDIO
 
 
-#define TITLE "pompouser"
+#define TITLE "tUnEdoODle"
 
 #define BUTTON_NONE     -1
 #define MOTION          1

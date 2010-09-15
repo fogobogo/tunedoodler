@@ -43,6 +43,19 @@ free_tune(tune_t **head, tune_t **cur)
     }
 }
 
+int
+count_tune(tune_t *head, tune_t *cur)
+{
+	int n = 0; /* node count */
+	cur = head;
+	while(cur->next != NULL) {
+		n++;
+		cur = cur->next;
+	}
+
+	return(n);
+}
+
 /* print all nodes and the values of its members */
 void
 print_tune(tune_t **head, tune_t **cur)
@@ -81,7 +94,6 @@ merge_tune(tune_t *left, tune_t *right)
         right = right->next;
     } 
     /* [comparsion ends here] */
-
     /* since sort is now the first tune of the list with the sorted tunes.. */
     sort->next = NULL;
     cur = sort;
@@ -174,11 +186,16 @@ delete_tune(tune_t **head, tune_t **cur, int *n, int rx, int ry)
     (*cur) = (*head);
     while((*cur)->next != NULL) {
 
+		/* if the current relative coordinates match a node */
         if((*cur)->x == rx
         && (*cur)->y == ry) {
 
-            /* TODO: handle exception in case first node will be deleted */
-            prev->next = (*cur)->next;
+			/* in case the first node is deleted move the head */
+			if((*cur) == (*head)) {
+				(*head) = (*head)->next;
+			}
+			/* else relink */
+			else { prev->next = (*cur)->next; }
             free((*cur));
             printf("removed tune %d\n",i);
             (*n)--;
@@ -245,7 +262,3 @@ play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
     }
 }
 
-void
-paginate_tune(tune_t *head, tune_t *cur, int page)
-{
-}
