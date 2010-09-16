@@ -328,6 +328,7 @@ int main (int argc, char *argv[])
     SDL_FreeSurface(ui.line);
     SDL_FreeSurface(ui.button);
     SDL_FreeSurface(ui.icon);
+    SDL_FreeSurface(ui.play);
     /* SDL_FreeSurface(ui.icon_pressed); */
     SDL_FreeSurface(font);
 
