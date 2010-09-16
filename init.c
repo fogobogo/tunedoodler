@@ -31,6 +31,16 @@ init_total(SDL_Surface *display, theme_t *ui, button_t *b)
 }
 
 void
+init_page(SDL_Surface *display, theme_t ui, page_t *pg)
+{
+	pg->num = 0;
+	pg->before = pg->num;
+	pg->width = display->w / ui.icon->h;
+	pg->idx = pg->num * pg->width;
+}
+
+
+void
 init_offsets(SDL_Surface *display, theme_t ui, metric_t *m, button_t b)
 {
     /* store the values so we can later figure out what button was pressed */

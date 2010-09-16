@@ -10,13 +10,14 @@ init_tune(tune_t **head, tune_t **cur, tune_t **new)
 
 /* save to the members of the node struct */
 void
-store_tune(tune_t **cur, int x, int y, int i, int yoff)
+store_tune(tune_t **cur, int x, int y, int i, int page)
 {
     if(i > BUTTON_NONE) {
-        (*cur)->x = x;
-        (*cur)->y = y;
+        (*cur)->x = x + (page * 25);
+        (*cur)->y = y; 
         (*cur)->i = i;
         printf("x: %d y: %d i: %d\n",x,y,i);
+        printf("x: %d y: %d i: %d\n",(*cur)->x,(*cur)->y,(*cur)->i);
     }
 }
 

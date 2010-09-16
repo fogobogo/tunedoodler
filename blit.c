@@ -77,5 +77,3 @@ blit_cursor(SDL_Surface *display, SDL_Rect pos, SDL_Rect clip, theme_t ui)
     SDL_UpdateRect(display,pos.x,pos.y,pos.w,pos.h);
 }
 
-void
-blit_page

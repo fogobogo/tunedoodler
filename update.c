@@ -2,17 +2,17 @@
 void
 update_display(SDL_Surface *surface, SDL_Surface *display, SDL_Rect pos)
 {
-    SDL_BlitSurface(surface,&pos,display,&pos);
-    SDL_UpdateRect(display,pos.x,pos.y,pos.w,pos.h);
+    SDL_BlitSurface(surface, &pos, display, &pos);
+    SDL_UpdateRect(display, pos.x, pos.y, pos.w, pos.h);
 }
 
 /* update the clipping rectangle for the icons */
 void
-update_clip(theme_t ui, button_t b, SDL_Rect *clip)
+update_clip(theme_t ui, int active, SDL_Rect *clip)
 {
     /* update the clipping rectangle for the icons */
-    if(b.active > BUTTON_NONE) {
-        clip->x = ui.icon->h * b.active;
+    if(active > BUTTON_NONE) {
+        clip->x = ui.icon->h * active;
         clip->y = 0;
         clip->w = ui.icon->h;
         clip->h = ui.icon->h;

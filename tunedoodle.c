@@ -8,6 +8,7 @@
 #include "sdl.c"
 #include "audio.c"
 #include "init.c"
+#include "page.c"
 #include "tunecore.c"
 #include "blit.c"
 #include "update.c"
@@ -42,7 +43,6 @@ int main (int argc, char *argv[])
     int vol = 1;
 
 	int i;
-	unsigned int page = 1;
 	unsigned int tempo;
 
 
@@ -52,7 +52,7 @@ int main (int argc, char *argv[])
     theme_t		ui; /* user interface resources. */
     metric_t    m; 	/* offsets, margins */
     button_t    b;  /* button tracking */
-
+	page_t		pg; /* page tracking */
 
     tune_t *head;
     tune_t *cur;
@@ -74,6 +74,7 @@ int main (int argc, char *argv[])
     init_tune(&head,&cur,&new);
 
     init_total(display,&ui,&b);
+	init_page(display,ui,&pg);
     init_offsets(display,ui,&m,b);
     init_margins(ui,&m);
 
@@ -177,23 +178,21 @@ int main (int argc, char *argv[])
                             save_tune(&head,&cur);
                             break;
 						case SDLK_F12:
-							paginate_tune(head,cur,page);
 							break;
 						case SDLK_z:
-							if(page <= 1) {
-								page = page;
+							/* previous page */
+							if(pg.num <= 0) {
+								pg.num = pg.num;
 							}
-							else { page--; }
-							printf("page: %d\n",page);
+							else { 
+								pg.before = pg.num;
+								pg.num--;
+							}
 							break;
 						case SDLK_x:
-							page++;
-							printf("page: %d\n",page);
-							i = count_tune(head,cur);
-							printf("nodes: %d\n",i);
-							SDL_BlitSurface(restore,NULL,background,NULL);
-							SDL_BlitSurface(background,NULL,display,NULL);
-							SDL_UpdateRect(display,0,0,0,0);
+							/* next page */
+							pg.before = pg.num;
+							pg.num++;
 							break;
                         default:
                             break;
@@ -207,13 +206,13 @@ int main (int argc, char *argv[])
                             /* find out if a button was clicked and set the active button to it */
                             button_click(event,display,&ui,m,&b);
                             /* update the clipping rectangle for the icon. but only if the active button isn't none */
-                            update_clip(ui,b,&clip);
+                            update_clip(ui,b.active,&clip);
                             /* check if the current positon is in the snap grid zone */
                             if(check_bounds(event,display,ui,m,b) == OK) {
                                 update_pos(event,ui,m,&pos);
                                 update_rel(event,ui,m,&rel);
                                 /* initalize the members of the current node with the relative values */
-                                store_tune(&cur, rel.x, rel.y, b.active, m.yoff);
+                                store_tune(&cur, rel.x, rel.y, b.active, pg.num);
                                 /* create the next node */
                                 create_tune(&cur,&new);
                                 n++;
@@ -267,6 +266,27 @@ int main (int argc, char *argv[])
 
 		if(loop_tune == 1) {
 			play_tune(cur,head,n,sounds,TEMPO);
+		}
+
+		if(pg.num != pg.before) {
+			pg.idx = pg.num * pg.width;
+			clear_page(restore,background,display);
+
+			printf("pg.idx %d\n",pg.idx);
+
+			cur = head;
+			while(cur->next != NULL) {
+				if(cur->x > pg.idx && cur->x < pg.idx + pg.width) {
+					update_page_pos(cur->x,cur->y,ui,m,pg,&pos);
+					update_clip(ui,cur->i,&clip);
+
+					SDL_BlitSurface(ui.icon,&clip,background,&pos);
+				}
+				cur = cur->next;
+			}
+			SDL_BlitSurface(background,NULL,display,NULL);
+			SDL_Flip(display);
+			pg.before = pg.num;
 		}
        
 		/* limit framerate */

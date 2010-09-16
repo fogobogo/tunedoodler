@@ -103,10 +103,18 @@ init_audio(SDL_AudioSpec **audio)
 void
 load_audio(SDL_AudioSpec **audio, sound_t *sound)
 {
+	FILE *fd;
+	int n = 0;
+	char c[256];
+
+	fd = fopen("default/sounds","r");
+
     SDL_LoadWAV("default/bass.wav",(*audio),&sound[0].data,&sound[0].length);
     SDL_LoadWAV("default/cowbell.wav",(*audio),&sound[1].data,&sound[1].length);
     SDL_LoadWAV("default/ding.wav",(*audio),&sound[2].data,&sound[2].length);
     SDL_LoadWAV("default/flutter.wav",(*audio),&sound[3].data,&sound[3].length);
+
+	fclose(fd);
 }
 
 void

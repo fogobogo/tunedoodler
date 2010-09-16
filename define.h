@@ -42,6 +42,13 @@ typedef struct {
     int total;          /* total number of buttons */
 } button_t;
 
+typedef struct {
+	int num;
+	int before;
+	int width;
+	int idx;
+} page_t;
+
 typedef struct tune_t {
     unsigned int x;
     unsigned int y;
