@@ -337,6 +337,9 @@ int main (int argc, char *argv[])
     SDL_FreeSurface(background); 
     SDL_FreeSurface(display);
     SDL_FreeWAV(sounds[0].data);
+    SDL_FreeWAV(sounds[1].data);
+    SDL_FreeWAV(sounds[2].data);
+    SDL_FreeWAV(sounds[3].data);
 
     SDL_Quit();
     printf("done.\n");
