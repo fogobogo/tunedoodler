@@ -21,7 +21,6 @@
 #define TRANSPARENT	255,0,255
 
 #define BUTTON          "default/button-test.bmp"
-#define BUTTON_PRESSED  "default/button-pressed.bmp"
 #define ICON            "default/icon.bmp"
 #define LINE            "default/line.bmp"
 #define PLAY            "default/play.bmp"

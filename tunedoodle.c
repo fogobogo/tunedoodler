@@ -327,18 +327,13 @@ int main (int argc, char *argv[])
     /* offload ui */
     SDL_FreeSurface(ui.line);
     SDL_FreeSurface(ui.button);
-    SDL_FreeSurface(ui.button_pressed);
     SDL_FreeSurface(ui.icon);
     /* SDL_FreeSurface(ui.icon_pressed); */
     SDL_FreeSurface(font);
 
     /* offload main surfaces */
-    SDL_FreeSurface(background); 
-    /*
-    SDL_FreeSurface(lines); 
-    SDL_FreeSurface(overlay); 
-    */
     SDL_FreeSurface(restore);
+    SDL_FreeSurface(background); 
     SDL_FreeSurface(display);
     SDL_FreeWAV(sounds[0].data);
 

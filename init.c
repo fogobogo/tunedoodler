@@ -20,7 +20,6 @@ init_ui(theme_t *ui, button_t *b)
 {
     /* load images */
     ui->button = load_image(BUTTON);
-    ui->button_pressed = load_image(BUTTON_PRESSED);
     ui->icon = load_image(ICON);
     ui->play = load_image(PLAY);
     ui->line = load_image(LINE);
