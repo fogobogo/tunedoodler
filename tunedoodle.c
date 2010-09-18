@@ -56,7 +56,7 @@ int main (int argc, char *argv[])
     int loop_tune = 0;
     int blit = 0;
 
-    float pitch = 0.05;
+    float pitch = 1;
     int vol = 1;
 
 	int i;

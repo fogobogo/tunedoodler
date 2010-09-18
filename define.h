@@ -45,10 +45,10 @@ typedef struct {
 
 /* metrics struct. holds values of various offsets to place user interface elements at the right spot on the screen */
 typedef struct {
-    unsigned int xoff;  /* horizontal offset */
-    unsigned int yoff;  /* vertical offset */
-    unsigned int xm;    /* horizontal margin */
-    unsigned int ym;    /* vertical margin */
+    int xoff;  /* horizontal offset */
+    int yoff;  /* vertical offset */
+    int xm;    /* horizontal margin */
+    int ym;    /* vertical margin */
 } metric_t;
 
 /* button struct to keep track of the various button states */
@@ -81,7 +81,7 @@ typedef struct {
 
 typedef struct {
     Sint16 *data;
-    int length;
+    unsigned int length;
     int pos;
     float f_pos; /* pos casted as float */
 	int vol;

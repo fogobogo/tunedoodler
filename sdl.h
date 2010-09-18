@@ -14,7 +14,7 @@
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
  */
-SDL_Surface* init_sdl(unsigned int screen_width, unsigned int screen_height);
-SDL_Surface* init_background(unsigned int w, unsigned int h, unsigned char r, unsigned char g, unsigned char b);
+SDL_Surface* init_sdl(int screen_width, int screen_height);
+SDL_Surface* init_background(int w, int h, Uint8 r, Uint8 g, Uint8 b);
 SDL_Surface* load_image(const char *filename);
-void set_colour(SDL_Surface *dst, int r, int g, int b);
+void set_colour(SDL_Surface *dst, Uint8 r, Uint8 g, Uint8 b);

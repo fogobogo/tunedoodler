@@ -14,6 +14,9 @@
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
  */
+
+#include "audio.h"
+
 /* voice_t voice[] is global */
 
 /* dummy callback. */
@@ -65,7 +68,9 @@ mix_audio(void *data, Uint8 *stream, int length)
 		if(!v->data) { continue; }
 			
 		/* roll over the samples */
-		/* multiply length by two because... ??? */
+		/* multiply length by two because... length has been halfed before??? */
+		/* segfaults */
+		/* length = length * 2; */
 		for(s = 0; s < length; ++s) {
 			/* WHAT DOES THIS DO ?? */
 			if(v->pos >= v->length) {
@@ -74,7 +79,7 @@ mix_audio(void *data, Uint8 *stream, int length)
 				break;
 			}
 
-			v->pos = (int)v->f_pos; /* float to int */
+			v->pos = (Sint16)v->f_pos; /* float to int */
 			/* bitshift to punch back the data to the Uint8 format ? */
 			/* fill buffer */
 			buffer[s++] += v->data[v->pos] * v->vol >> 8; /* s = +1 */

@@ -18,9 +18,10 @@
 #include <SDL/SDL.h>
 
 #include "config.h"
+#include "sdl.h"
 
 SDL_Surface* 
-init_sdl(unsigned int screen_width, unsigned int screen_height) 
+init_sdl(int screen_width, int screen_height) 
 {
 	SDL_Surface *tmp;
 	atexit(SDL_Quit);
@@ -45,7 +46,7 @@ init_sdl(unsigned int screen_width, unsigned int screen_height)
 
 /* create background with color */
 SDL_Surface*
-init_background(unsigned int w, unsigned int h, unsigned char r, unsigned char g, unsigned char b)
+init_background(int w, int h, Uint8 r, Uint8 g, Uint8 b)
 {
     SDL_Surface *tmp;
     tmp = SDL_CreateRGBSurface(SDL_FLAGS,w,h,DEPTH,0,0,0,0);
@@ -81,7 +82,7 @@ load_image(const char *filename)
 
 /* set the whole surface to a defined colour */
 void 
-set_colour(SDL_Surface *dst, int r, int g, int b) 
+set_colour(SDL_Surface *dst, Uint8 r, Uint8 g, Uint8 b) 
 {
 	Uint32 color;
 	color = SDL_MapRGB(dst->format,r,g,b);

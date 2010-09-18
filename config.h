@@ -25,7 +25,7 @@
 #define LINE            "default/line.bmp"
 #define PLAY            "default/play.bmp"
 
-#define TEMPO           120
+#define TEMPO           300
 
 #define SET             "default/bass.wav", "default/cowbell.wav", "default/ding.wav", "default/flutter.wav", "default/strings.wav", NULL
 
