@@ -242,7 +242,7 @@ int main (int argc, char *argv[])
                                 /* make the button click actually appear on screen */
                                 blit_click(background,ui,pos,clip);
                             }
-							if(check_bounds(event,display,ui,m,b) == 2) {
+							if(check_play(event,ui) == 1) {
 								b.active = BUTTON_NONE;
 								update_pos(event,ui,m,&pos);
 								update_rel(event,ui,m,&rel);

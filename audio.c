@@ -36,7 +36,7 @@ process_audio(voice_t *voice, sound_t *sound, int vol, float pitch)
 	voice->vol = (int)vol * 256.0;
     voice->pitch = pitch;
 
-	/* point the channel to the sound data ? */
+	/* point the channel to the sound data */
     voice->data = (Sint16 *)sound->data;
 }
 
@@ -46,7 +46,6 @@ mix_audio(void *data, Uint8 *stream, int len)
     int s;
     int i;
     Sint16 *buffer;
-    voice_t *v;
 
     /* buffer points to stream(?), why not just manipulate the stream directly ? */
 	/* init buffer */
@@ -55,33 +54,26 @@ mix_audio(void *data, Uint8 *stream, int len)
 	/* only the buffer gets played back? */
 	memset(buffer, 0, len); /* not sure that is a good idea */
 
-    /* how come? cut length in half because we did uint8 -> sint16 ??*/
     len /= 4;
 
     /* for every channel (voice) ... */
     for(i=0; i < 10; ++i) {
-        v = &voice[i];
 		/* if there is no data start the next cycle */
-		 if(!v->data) { continue; }
+		 if(!voice[i].data) { continue; }
 			
 		/* roll over the samples */
 		for(s = 0; s < len; ++s) {
-            if(v->pos >= v->len) {
-                v->data = NULL;
+            if(voice[i].pos >= voice[i].len) {
+                voice[i].data = NULL;
                 break;
             }
 
-			v->pos = (Sint16)v->f_pos; /* float to int */
-			/* bitshift to punch back the data to the Uint8 format ? */
+			voice[i].pos = (Sint16)voice[i].f_pos; /* float to int */
 			/* fill buffer, interleave audio signal */
-            /* WHY bitshift by 10??? 8 sounds awful */
-			buffer[s * 2] += v->data[v->pos] * v->vol >> 8; /* left channel output */
-			buffer[s * 2 + 1] += v->data[v->pos] * v->vol >> 8; /* right channel output */
-            /*
-            printf("l: %d\n",buffer[s * 2]);
-            printf("r: %d\n",buffer[s * 2 + 1]);
-            */
-			v->f_pos += v->pitch;
+            /* shift down by 10 to (hopefully) prevent clipping */
+			buffer[s * 2] += voice[i].data[voice[i].pos] * voice[i].vol >> 10; /* left channel output */
+			buffer[s * 2 + 1] += voice[i].data[voice[i].pos] * voice[i].vol >> 10; /* right channel output */
+			voice[i].f_pos += voice[i].pitch;
 		}
     }
 }
@@ -95,12 +87,10 @@ init_audio()
         fprintf(stdout,"could not initalize audio... :<\n");
     }
 
-    /* TODO: find out why simplemixer doesnt need that */
-
     req.freq = 48000;
     req.format = AUDIO_S16SYS;
     req.channels = 2; /* stereo */
-    req.samples = 1024; /* big buffer would be ok, we won't need a quick response */
+    req.samples = 4096; /* big buffer would be ok, we won't need a quick response */
     req.callback = mix_audio;
     req.userdata = NULL;
 
@@ -122,10 +112,10 @@ load_audio(sound_t *sound)
 
 	fd = fopen("default/sounds","r");
 
-    SDL_LoadWAV("default/pluck.wav",&audio,&sound[0].data,&sound[0].len);
-    SDL_LoadWAV("default/bass.wav",&audio,&sound[1].data,&sound[1].len);
-    SDL_LoadWAV("default/toms.wav",&audio,&sound[2].data,&sound[2].len);
-    SDL_LoadWAV("default/distkick.wav",&audio,&sound[3].data,&sound[3].len);
+    SDL_LoadWAV("default/pluck2.wav",&audio,&sound[0].data,&sound[0].len);
+    SDL_LoadWAV("default/tom2.wav",&audio,&sound[1].data,&sound[1].len);
+    SDL_LoadWAV("default/conga2.wav",&audio,&sound[2].data,&sound[2].len);
+    SDL_LoadWAV("default/distkick2.wav",&audio,&sound[3].data,&sound[3].len);
 
 	fclose(fd);
 }
@@ -135,6 +125,5 @@ free_audio()
 {
     SDL_PauseAudio(1);
     SDL_CloseAudio();
-    /* free(audio); */
 }
 

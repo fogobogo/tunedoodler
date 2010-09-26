@@ -279,7 +279,8 @@ play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
             /* PLAY ROUTINE COMES HERE */
             /* pitch = abs(((float)(cur->y) - 10)) * (0.2); */
             printf("pitch: %.2f\n",pitch[cur->y]);
-            process_audio(&voice[cur->y],&sounds[cur->i],1,pitch[cur->y]);
+            /* fill channel with the payload (sound) we want to pass to the output (soundcard) */
+            process_audio(&voice[cur->y], &sounds[cur->i], 1, pitch[cur->y]);
 
             cur = cur->next;
             n--; /* count down nodes */

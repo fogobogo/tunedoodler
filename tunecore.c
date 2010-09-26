@@ -60,12 +60,19 @@ check_bounds(SDL_Event event, SDL_Surface *display, theme_t ui, metric_t m, butt
         return(1);
     }
 
+	else { return(0); }
+}
+
+int
+check_play(SDL_Event event, theme_t ui)
+{
 	if(event.button.y < ui.play->h
 		&& event.button.x < ui.play->w) {
 
-		return(2);
+		return(1);
 	}
 
-	else { return(0); }
+    else { return(0); }
 }
+
 
