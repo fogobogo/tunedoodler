@@ -22,6 +22,8 @@ init_ui(theme_t *ui, button_t *b)
     ui->button = load_image(BUTTON);
     ui->icon = load_image(ICON);
     ui->play = load_image(PLAY);
+    ui->playicon = load_image(PLAYICON);
+	ui->stopicon = load_image(STOPICON);
     ui->line = load_image(LINE);
 
     /* set active button to none */

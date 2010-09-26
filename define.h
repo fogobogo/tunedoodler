@@ -22,7 +22,8 @@
 #define SDL_INIT    SDL_INIT_VIDEO|SDL_INIT_AUDIO
 
 
-#define TITLE "tUnEdoODle"
+#define TITLE 			"tUnEdoODleR"
+#define VERSION			"0.1"
 
 #define BUTTON_NONE     -1
 #define MOTION          1
@@ -40,6 +41,8 @@ typedef struct {
     SDL_Surface *icon;
     /* SDL_Surface *icon_pressed */
     SDL_Surface *play;
+	SDL_Surface *playicon;
+	SDL_Surface *stopicon;
     /* SDL_Surface *play_pressed; */
 } theme_t;
 
@@ -75,13 +78,13 @@ typedef struct tune_t {
 
 typedef struct {
     Uint8 *data;
-    Uint32 length;
+    Uint32 len;
 } sound_t;
 
 
 typedef struct {
     Sint16 *data;
-    unsigned int length;
+    Uint32 len;
     int pos;
     float f_pos; /* pos casted as float */
 	int vol;
@@ -90,3 +93,5 @@ typedef struct {
 
 /* playback channels. global variable */
 voice_t voice[10];
+
+SDL_AudioSpec audio;

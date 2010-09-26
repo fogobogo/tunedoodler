@@ -21,15 +21,29 @@ blit_buttons(SDL_Surface *surface, theme_t ui, metric_t m, button_t b)
 {
     SDL_Rect pos;
     int i;
-
-    /* blit "play" button */
+    
+	/* blit "play" button */
     SDL_BlitSurface(ui.play,NULL,surface,NULL);
+
     /* blit instrument buttons */
     for(i=0;i<b.total;i++) {
         pos.x = m.xoff + (ui.button->w * i);
         pos.y = 0;
         SDL_BlitSurface(ui.button,NULL,surface,&pos);
     }
+}
+
+void
+blit_play(SDL_Surface *surface, theme_t ui)
+{
+	SDL_Rect pos;
+
+	/* blit icon in the middle of the "play" button */
+	pos.x = (ui.play->w - ui.playicon->w) / 2;
+	pos.y = (ui.play->h - ui.playicon->h) / 2;
+	pos.w = ui.playicon->w;
+	pos.h = ui.playicon->h;
+	SDL_BlitSurface(ui.playicon,NULL,surface,&pos);
 }
 
 void

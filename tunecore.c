@@ -22,13 +22,13 @@
 
 /* kind of bad. consider replacing it with an SDL_Rect array */
 void
-button_click(SDL_Event event, SDL_Surface *display, theme_t *ui, metric_t m, button_t *b)
+button_click(SDL_Event event, theme_t ui, metric_t m, button_t *b)
 {
     if( event.button.x > m.xoff && 
-        event.button.y < ui->button->h && 
-        event.button.x < ui->button->w * b->total + m.xoff) {
+        event.button.y < ui.button->h && 
+        event.button.x < ui.button->w * b->total + m.xoff) {
         b->before = b->active;
-        b->active = (event.button.x - m.xoff) / ui->button->w;
+        b->active = (event.button.x - m.xoff) / ui.button->w;
     }
 
 }
@@ -59,6 +59,12 @@ check_bounds(SDL_Event event, SDL_Surface *display, theme_t ui, metric_t m, butt
 
         return(1);
     }
+
+	if(event.button.y < ui.play->h
+		&& event.button.x < ui.play->w) {
+
+		return(2);
+	}
 
 	else { return(0); }
 }

@@ -63,14 +63,14 @@ free_tune(tune_t **head, tune_t **cur)
 int
 count_tune(tune_t *head, tune_t *cur)
 {
-	int n = 0; /* node count */
-	cur = head;
-	while(cur->next != NULL) {
-		n++;
-		cur = cur->next;
-	}
+    int n = 0; /* node count */
+    cur = head;
+    while(cur->next != NULL) {
+        n++;
+        cur = cur->next;
+    }
 
-	return(n);
+    return(n);
 }
 
 /* print all nodes and the values of its members */
@@ -203,16 +203,16 @@ delete_tune(tune_t **head, tune_t **cur, int *n, int rx, int ry)
     (*cur) = (*head);
     while((*cur)->next != NULL) {
 
-		/* if the current relative coordinates match a node */
+        /* if the current relative coordinates match a node */
         if((*cur)->x == rx
         && (*cur)->y == ry) {
 
-			/* in case the first node is deleted move the head */
-			if((*cur) == (*head)) {
-				(*head) = (*head)->next;
-			}
-			/* else relink */
-			else { prev->next = (*cur)->next; }
+            /* in case the first node is deleted move the head */
+            if((*cur) == (*head)) {
+                (*head) = (*head)->next;
+            }
+            /* else relink */
+            else { prev->next = (*cur)->next; }
             free((*cur));
             printf("removed tune %d\n",i);
             (*n)--;
@@ -256,7 +256,19 @@ void
 play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
 {
     int pos; /* position */
-   	float pitch;
+    float pitch[10];
+
+    pitch[0] = 5.0;
+    pitch[1] = 4.5;
+    pitch[2] = 4.0;
+    pitch[3] = 3.5;
+    pitch[4] = 3.0;
+    pitch[5] = 2.5;
+    pitch[6] = 2.0;
+    pitch[7] = 1.5;
+    pitch[8] = 1.0;
+    pitch[9] = 0.5;
+    pitch[10] = 0;
 
     /* start at the beginning */
     pos = 0;
@@ -265,9 +277,9 @@ play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
     while(n != 0) {
         while(cur->x == pos) {
             /* PLAY ROUTINE COMES HERE */
-			pitch = ((float)(cur->y) - 10) * (-0.5);
-			printf("pitch: %.2f\n",pitch);
-            process_audio(&voice[cur->y],&sounds[cur->i],1,pitch);
+            /* pitch = abs(((float)(cur->y) - 10)) * (0.2); */
+            printf("pitch: %.2f\n",pitch[cur->y]);
+            process_audio(&voice[cur->y],&sounds[cur->i],1,pitch[cur->y]);
 
             cur = cur->next;
             n--; /* count down nodes */

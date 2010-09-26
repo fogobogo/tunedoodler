@@ -15,8 +15,6 @@
  *      MA 02110-1301, USA.
  */
 
-#include "audio.h"
-
 /* voice_t voice[] is global */
 
 /* dummy callback. */
@@ -26,25 +24,24 @@ dummy(void *data, Uint8 *stream, int len)
 }
 
 void
-process_audio(voice_t *voice, sound_t *sounds, int vol, float pitch)
+process_audio(voice_t *voice, sound_t *sound, int vol, float pitch)
 {
-    voice->data = NULL; /* what ? */
+    voice->data = NULL; /* clear channel */
 
     /* process audio data */
-    voice->length = sounds->length / 2;
+    voice->len = sound->len / 2; /* why ?! stereo maybe ? */
     voice->pos = 0;
-    voice->f_pos = 0;
+    voice->f_pos = 0.0;
 	/* pump up the volume! pump it up! pump it up! */
-	voice->vol = (int)vol * 256;
-	printf("voice->vol: %d\n",voice->vol);
+	voice->vol = (int)vol * 256.0;
     voice->pitch = pitch;
 
 	/* point the channel to the sound data ? */
-    voice->data = (Sint16 *)sounds->data;
+    voice->data = (Sint16 *)sound->data;
 }
 
 void
-mix_audio(void *data, Uint8 *stream, int length)
+mix_audio(void *data, Uint8 *stream, int len)
 {
     int s;
     int i;
@@ -56,73 +53,66 @@ mix_audio(void *data, Uint8 *stream, int length)
     buffer = (Sint16 *)stream;
 	/* clearing the buffer, no idea why (artifacts?) */
 	/* only the buffer gets played back? */
-	memset(buffer, 0, length); /* not sure that is a good idea */
+	memset(buffer, 0, len); /* not sure that is a good idea */
 
-    /* how come? */
-    length = length / 2;
+    /* how come? cut length in half because we did uint8 -> sint16 ??*/
+    len /= 4;
 
     /* for every channel (voice) ... */
-    for(i=0; i < 10; i++) {
-		v = &voice[i];
+    for(i=0; i < 10; ++i) {
+        v = &voice[i];
 		/* if there is no data start the next cycle */
-		if(!v->data) { continue; }
+		 if(!v->data) { continue; }
 			
 		/* roll over the samples */
-		/* multiply length by two because... length has been halfed before??? */
-		/* segfaults */
-		/* length = length * 2; */
-		for(s = 0; s < length; ++s) {
-			/* WHAT DOES THIS DO ?? */
-			if(v->pos >= v->length) {
-				v->data = NULL;
-				/* printf("ding.\n"); */
-				break;
-			}
+		for(s = 0; s < len; ++s) {
+            if(v->pos >= v->len) {
+                v->data = NULL;
+                break;
+            }
 
 			v->pos = (Sint16)v->f_pos; /* float to int */
 			/* bitshift to punch back the data to the Uint8 format ? */
-			/* fill buffer */
-			buffer[s++] += v->data[v->pos] * v->vol >> 8; /* s = +1 */
-			buffer[s++] += v->data[v->pos] * v->vol >> 8; /* s = +2 */
-			/* printf("dong.\n"); */
+			/* fill buffer, interleave audio signal */
+            /* WHY bitshift by 10??? 8 sounds awful */
+			buffer[s * 2] += v->data[v->pos] * v->vol >> 8; /* left channel output */
+			buffer[s * 2 + 1] += v->data[v->pos] * v->vol >> 8; /* right channel output */
+            printf("l: %d\n",buffer[s * 2]);
+            printf("r: %d\n",buffer[s * 2 + 1]);
 			v->f_pos += v->pitch;
 		}
     }
 }
 
 void
-init_audio(SDL_AudioSpec **audio)
+init_audio()
 {
+    SDL_AudioSpec req;
+
     if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
         fprintf(stdout,"could not initalize audio... :<\n");
     }
 
     /* TODO: find out why simplemixer doesnt need that */
-    (*audio) = malloc(sizeof(SDL_AudioSpec));
 
-    (*audio)->freq = 44100;
-    (*audio)->format = AUDIO_S16SYS;
-    (*audio)->channels = 2; /* stereo */
-    (*audio)->samples = 8192; /* big buffer, we won't need a quick response */
-    (*audio)->callback = mix_audio;
-    (*audio)->userdata = NULL;
+    req.freq = 48000;
+    req.format = AUDIO_S16SYS;
+    req.channels = 2; /* stereo */
+    req.samples = 1024; /* big buffer would be ok, we won't need a quick response */
+    req.callback = mix_audio;
+    req.userdata = NULL;
 
-    if(SDL_OpenAudio((*audio),NULL) != 0) {
+    if(SDL_OpenAudio(&req, &audio) != 0) {
         fprintf(stdout,"could not obtain audio... :<\n");
         exit(1);
     }
-
-	printf("freq: %d\n",(*audio)->freq);
-	printf("format: %d\n",(*audio)->format);
-	printf("channels: %d\n",(*audio)->channels);
-	printf("samples: %d\n",(*audio)->samples);
 
     /* from this point on data gets passed to the soundcard */
     SDL_PauseAudio(0);
 }
 
 void
-load_audio(SDL_AudioSpec **audio, sound_t *sound)
+load_audio(sound_t *sound)
 {
 	FILE *fd;
 	int n = 0;
@@ -130,19 +120,19 @@ load_audio(SDL_AudioSpec **audio, sound_t *sound)
 
 	fd = fopen("default/sounds","r");
 
-    SDL_LoadWAV("default/bass.wav",(*audio),&sound[0].data,&sound[0].length);
-    SDL_LoadWAV("default/cowbell.wav",(*audio),&sound[1].data,&sound[1].length);
-    SDL_LoadWAV("default/ding.wav",(*audio),&sound[2].data,&sound[2].length);
-    SDL_LoadWAV("default/flutter.wav",(*audio),&sound[3].data,&sound[3].length);
+    SDL_LoadWAV("default/pluck.wav",&audio,&sound[0].data,&sound[0].len);
+    SDL_LoadWAV("default/bass.wav",&audio,&sound[1].data,&sound[1].len);
+    SDL_LoadWAV("default/toms.wav",&audio,&sound[2].data,&sound[2].len);
+    SDL_LoadWAV("default/distkick.wav",&audio,&sound[3].data,&sound[3].len);
 
 	fclose(fd);
 }
 
 void
-free_audio(SDL_AudioSpec **audio) 
+free_audio() 
 {
     SDL_PauseAudio(1);
     SDL_CloseAudio();
-    free((*audio));
+    /* free(audio); */
 }
 

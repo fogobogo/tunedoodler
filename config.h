@@ -23,9 +23,11 @@
 #define BUTTON          "default/button-test.bmp"
 #define ICON            "default/icon.bmp"
 #define LINE            "default/line.bmp"
-#define PLAY            "default/play.bmp"
+#define PLAY			"default/play.bmp"
+#define PLAYICON		"default/play-icon.bmp"
+#define STOPICON		"default/stop-icon.bmp"
 
-#define TEMPO           300
+#define TEMPO           160
 
 #define SET             "default/bass.wav", "default/cowbell.wav", "default/ding.wav", "default/flutter.wav", "default/strings.wav", NULL
 

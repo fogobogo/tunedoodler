@@ -22,6 +22,7 @@
 
 #include "define.h"
 #include "config.h"
+
 #include "sdl.c"
 #include "audio.c"
 #include "init.c"
@@ -47,7 +48,7 @@ int main (int argc, char *argv[])
 	SDL_Surface *restore;
 	SDL_Surface *font;
 
-    SDL_AudioSpec *audio;
+    /* SDL_AudioSpec *audio; */
 
     SDL_Event event;
 
@@ -57,13 +58,16 @@ int main (int argc, char *argv[])
     int blit = 0;
 
     float pitch = 1;
-    int vol = 1;
+    float vol = 1.0;
 
 	int i;
 	unsigned int tempo;
 
 
     int n = 0; /* node counter */
+
+	
+	printf("welcome to: %s - %s\n", TITLE, VERSION);
 
 
     theme_t		ui; /* user interface resources. */
@@ -75,7 +79,7 @@ int main (int argc, char *argv[])
     tune_t *cur;
     tune_t *new;
 
-    sound_t sounds[4];
+    sound_t sound[4];
 
     SDL_Rect pos;
     SDL_Rect rel;
@@ -104,23 +108,25 @@ int main (int argc, char *argv[])
     blit_icons(background,ui,m,b);
 
 	restore = SDL_ConvertSurface(background,background->format,DEPTH); /* create a copy of the background */
+
+	blit_play(background,ui);
+
     SDL_BlitSurface(background,NULL,display,NULL);
     SDL_UpdateRect(display,0,0,0,0);
   
     /* TEST. A.K.A. startup sound */
-    sounds[0].data = NULL;
-	memset(sounds,0,sizeof(sound_t));
-	memset(voice,0,sizeof(voice_t));
-    load_audio(&audio,sounds);
+    sound[0].data = NULL;
+    load_audio(sound);
 
 	/*
-    process_audio(&voice[0],&sounds[0],1,1.0);
+    process_audio(&voice[0],&sound[0],1,1.0);
     if(voice[0].data == NULL) {
         printf("ouch.\n");
     }
 	*/
 
-	do_print("1234567890",100,100,font,display);
+
+	/* do_print("1234567890",100,100,font,display); */
 
 
     /* MAIN LOOP */
@@ -137,13 +143,13 @@ int main (int argc, char *argv[])
                         /* TODO get rid of this mess */
                         case SDLK_DOWN:
                             pitch -= 0.5;
-                            process_audio(&voice[0],&sounds[0],vol,pitch);
+                            process_audio(&voice[1],&sound[1],vol,pitch);
 							printf("pitch; %.2f\n",pitch);
                             SDL_Delay(200);
                             break;
                         case SDLK_UP:
                             pitch += 0.5;
-                            process_audio(&voice[0],&sounds[0],vol,pitch);
+                            process_audio(&voice[1],&sound[1],vol,pitch);
 							printf("pitch; %.2f\n",pitch);
                             SDL_Delay(200);
                             break;
@@ -170,7 +176,7 @@ int main (int argc, char *argv[])
                             /* sort all nodes so they can be played in order */
                             head = msort_tune(head,n);
                             /* play them! */
-                            play_tune(cur,head,n,sounds,TEMPO);
+                            play_tune(cur,head,n,sound,TEMPO);
                             printf("n: %d\n",n);
                             break;
                         case SDLK_s:
@@ -221,11 +227,11 @@ int main (int argc, char *argv[])
                     switch(event.button.button) {
                         case SDL_BUTTON_LEFT:
                             /* find out if a button was clicked and set the active button to it */
-                            button_click(event,display,&ui,m,&b);
+                            button_click(event,ui,m,&b);
                             /* update the clipping rectangle for the icon. but only if the active button isn't none */
                             update_clip(ui,b.active,&clip);
                             /* check if the current positon is in the snap grid zone */
-                            if(check_bounds(event,display,ui,m,b) == OK) {
+                            if(check_bounds(event,display,ui,m,b) == 1) {
                                 update_pos(event,ui,m,&pos);
                                 update_rel(event,ui,m,&rel);
                                 /* initalize the members of the current node with the relative values */
@@ -236,6 +242,13 @@ int main (int argc, char *argv[])
                                 /* make the button click actually appear on screen */
                                 blit_click(background,ui,pos,clip);
                             }
+							if(check_bounds(event,display,ui,m,b) == 2) {
+								b.active = BUTTON_NONE;
+								update_pos(event,ui,m,&pos);
+								update_rel(event,ui,m,&rel);
+                            	update_display(background,display,pos);
+								play_tune(cur,head,n,sound,TEMPO);
+							}
                             printf("#: %d\n",b.active);
                             printf("nodes: %d\n",n);
                             break;
@@ -282,7 +295,7 @@ int main (int argc, char *argv[])
 		/* printf("x: %d\ty: %d\n",event.motion.x, event.motion.y); */
 
 		if(loop_tune == 1) {
-			play_tune(cur,head,n,sounds,TEMPO);
+			play_tune(cur,head,n,sound,TEMPO);
 		}
 
 		if(pg.num != pg.before) {
@@ -329,6 +342,7 @@ int main (int argc, char *argv[])
     SDL_FreeSurface(ui.button);
     SDL_FreeSurface(ui.icon);
     SDL_FreeSurface(ui.play);
+    SDL_FreeSurface(ui.playicon);
     /* SDL_FreeSurface(ui.icon_pressed); */
     SDL_FreeSurface(font);
 
@@ -336,10 +350,10 @@ int main (int argc, char *argv[])
     SDL_FreeSurface(restore);
     SDL_FreeSurface(background); 
     SDL_FreeSurface(display);
-    SDL_FreeWAV(sounds[0].data);
-    SDL_FreeWAV(sounds[1].data);
-    SDL_FreeWAV(sounds[2].data);
-    SDL_FreeWAV(sounds[3].data);
+    SDL_FreeWAV(sound[0].data);
+    SDL_FreeWAV(sound[1].data);
+    SDL_FreeWAV(sound[2].data);
+    SDL_FreeWAV(sound[3].data);
 
     SDL_Quit();
     printf("done.\n");
