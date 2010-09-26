@@ -77,8 +77,10 @@ mix_audio(void *data, Uint8 *stream, int len)
             /* WHY bitshift by 10??? 8 sounds awful */
 			buffer[s * 2] += v->data[v->pos] * v->vol >> 8; /* left channel output */
 			buffer[s * 2 + 1] += v->data[v->pos] * v->vol >> 8; /* right channel output */
+            /*
             printf("l: %d\n",buffer[s * 2]);
             printf("r: %d\n",buffer[s * 2 + 1]);
+            */
 			v->f_pos += v->pitch;
 		}
     }
