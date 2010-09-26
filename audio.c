@@ -64,7 +64,7 @@ mix_audio(void *data, Uint8 *stream, int len)
 		/* roll over the samples */
 		for(s = 0; s < len; ++s) {
             if(voice[i].pos >= voice[i].len) {
-                voice[i].data = NULL;
+                voice[i].data = 0; /* generate silence ? */
                 break;
             }
 
