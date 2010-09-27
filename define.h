@@ -33,7 +33,7 @@
 #define FAIL            0
 #define NOTHING			0
 
-/* interface struct. holds pointers to the user interface images and their metrics */
+/* interface struct. holds pointers to the user interface images */ 
 typedef struct {
     SDL_Surface *line;
     SDL_Surface *button;
@@ -76,22 +76,3 @@ typedef struct tune_t {
 } tune_t;
 
 
-typedef struct {
-    Uint8 *data;
-    Uint32 len;
-} sound_t;
-
-
-typedef struct {
-    Sint16 *data;
-    Uint32 len;
-    int pos;
-    float f_pos; /* pos casted as float */
-	int vol;
-    float pitch;
-} voice_t;
-
-/* playback channels. global variable */
-voice_t voice[10];
-
-SDL_AudioSpec audio;

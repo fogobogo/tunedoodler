@@ -256,23 +256,22 @@ void
 play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
 {
     int pos; /* position */
-    float pitch[10];
+    int timer;
 
-    pitch[0] = 5.0;
-    pitch[1] = 4.5;
-    pitch[2] = 4.0;
-    pitch[3] = 3.5;
-    pitch[4] = 3.0;
-    pitch[5] = 2.5;
-    pitch[6] = 2.0;
-    pitch[7] = 1.5;
-    pitch[8] = 1.0;
-    pitch[9] = 0.5;
-    pitch[10] = 0;
+    int i;
+
+    float pitch[10 + 1];
+
+    for(i = 0; i <= 10; i++) {
+        pitch[i] = i;
+    }
+
 
     /* start at the beginning */
     pos = 0;
     cur = head;
+
+    timer = (Sint32)SDL_GetTicks();
 
     while(n != 0) {
         while(cur->x == pos) {
@@ -287,7 +286,10 @@ play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
             printf("n: %d\n",n);
         }
 
-        SDL_Delay(tempo);
+		timer += 120;
+        /* polls SDL_GetTicks until it reaches 0 */
+		while(((Sint32)SDL_GetTicks() - timer) < 0)
+			SDL_Delay(10);
         pos++;
     }
 }

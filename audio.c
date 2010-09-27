@@ -16,6 +16,7 @@
  */
 
 /* voice_t voice[] is global */
+#include "audio.h"
 
 /* dummy callback. */
 void
@@ -50,21 +51,17 @@ mix_audio(void *data, Uint8 *stream, int len)
     /* buffer points to stream(?), why not just manipulate the stream directly ? */
 	/* init buffer */
     buffer = (Sint16 *)stream;
-	/* clearing the buffer, no idea why (artifacts?) */
-	/* only the buffer gets played back? */
-	memset(buffer, 0, len); /* not sure that is a good idea */
+	memset(buffer, 0, len); /* clear the buffer. data comes from voice */
 
     len /= 4;
 
     /* for every channel (voice) ... */
-    for(i=0; i < 10; ++i) {
-		/* if there is no data start the next cycle */
-		 if(!voice[i].data) { continue; }
+    for(i=0; i <= 10; ++i) {
 			
 		/* roll over the samples */
 		for(s = 0; s < len; ++s) {
             if(voice[i].pos >= voice[i].len) {
-                voice[i].data = 0; /* generate silence ? */
+                voice[i].data = NULL; 
                 break;
             }
 
@@ -87,7 +84,7 @@ init_audio()
         fprintf(stdout,"could not initalize audio... :<\n");
     }
 
-    req.freq = 48000;
+    req.freq = 44100;
     req.format = AUDIO_S16SYS;
     req.channels = 2; /* stereo */
     req.samples = 4096; /* big buffer would be ok, we won't need a quick response */
@@ -106,18 +103,10 @@ init_audio()
 void
 load_audio(sound_t *sound)
 {
-	FILE *fd;
-	int n = 0;
-	char c[256];
-
-	fd = fopen("default/sounds","r");
-
     SDL_LoadWAV("default/pluck2.wav",&audio,&sound[0].data,&sound[0].len);
     SDL_LoadWAV("default/tom2.wav",&audio,&sound[1].data,&sound[1].len);
     SDL_LoadWAV("default/conga2.wav",&audio,&sound[2].data,&sound[2].len);
     SDL_LoadWAV("default/distkick2.wav",&audio,&sound[3].data,&sound[3].len);
-
-	fclose(fd);
 }
 
 void

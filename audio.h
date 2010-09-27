@@ -14,9 +14,23 @@
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
  */
-void dummy(void *data, Uint8 *stream, int len);
-void process_audio(voice_t *voice, sound_t *sounds, int vol, float pitch);
-void mix_audio(void *data, Uint8 *stream, int length);
-void init_audio(SDL_AudioSpec **audio);
-void load_audio(SDL_AudioSpec **audio, sound_t *sound);
-void free_audio(SDL_AudioSpec **audio);
+
+typedef struct {
+    Uint8 *data;
+    Uint32 len;
+} sound_t;
+
+typedef struct {
+    Sint16 *data;
+    Uint32 len;
+    int pos;
+    float f_pos; /* pos casted as float */
+	int vol;
+    float pitch;
+} voice_t;
+
+/* playback channels. global variable */
+voice_t voice[10 + 1];
+
+SDL_AudioSpec audio;
+
