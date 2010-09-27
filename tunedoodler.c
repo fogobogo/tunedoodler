@@ -63,6 +63,8 @@ int main (int argc, char *argv[])
 	int i;
 	unsigned int tempo;
 
+    tempo = TEMPO;
+
 
     int n = 0; /* node counter */
 

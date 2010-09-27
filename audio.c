@@ -87,7 +87,7 @@ init_audio()
     req.freq = 44100;
     req.format = AUDIO_S16SYS;
     req.channels = 2; /* stereo */
-    req.samples = 512; /* big buffer would be ok, we won't need a quick response */
+    req.samples = 1024; /* big buffer would be ok, we won't need a quick response */
     req.callback = mix_audio;
     req.userdata = NULL;
 

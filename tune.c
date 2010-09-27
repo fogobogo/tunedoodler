@@ -285,9 +285,8 @@ play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
             break;
         }
         
-        printf("n: %d\n",n);
 
-        SDL_Delay(tempo);
+        SDL_Delay(TEMPO);
         pos++;
     }
 }
