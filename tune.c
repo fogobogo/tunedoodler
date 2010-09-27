@@ -271,25 +271,23 @@ play_tune(tune_t *cur, tune_t *head, int n, sound_t *sounds, int tempo)
     pos = 0;
     cur = head;
 
-    timer = (Sint32)SDL_GetTicks();
-
     while(n != 0) {
         while(cur->x == pos) {
             /* PLAY ROUTINE COMES HERE */
-            /* pitch = abs(((float)(cur->y) - 10)) * (0.2); */
-            printf("pitch: %.2f\n",pitch[cur->y]);
-            /* fill channel with the payload (sound) we want to pass to the output (soundcard) */
+            /* printf("pitch: %.2f\n",pitch[cur->y]); */
+            /* fill channel (voice) with the payload (sound) we want to pass to the output (soundcard) */
             process_audio(&voice[cur->y], &sounds[cur->i], 1, pitch[cur->y]);
-
+            /* move on to next node */ 
             cur = cur->next;
-            n--; /* count down nodes */
-            printf("n: %d\n",n);
         }
+        
+        if(cur->next == NULL) {
+            break;
+        }
+        
+        printf("n: %d\n",n);
 
-		timer += 120;
-        /* polls SDL_GetTicks until it reaches 0 */
-		while(((Sint32)SDL_GetTicks() - timer) < 0)
-			SDL_Delay(10);
+        SDL_Delay(tempo);
         pos++;
     }
 }
