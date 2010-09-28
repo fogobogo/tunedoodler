@@ -30,7 +30,7 @@ process_audio(voice_t *voice, sound_t *sound, int vol, float pitch)
     voice->data = NULL; /* stop channel */
 
     /* process audio data */
-    voice->len = sound->len / 2; /* why ?! stereo maybe ? */
+    voice->len = sound->len / 2; /* why ?! for stereo maybe ? */
     voice->pos = 0;
     voice->f_pos = 0.0;
 	/* pump up the volume! pump it up! pump it up! */
@@ -41,14 +41,15 @@ process_audio(voice_t *voice, sound_t *sound, int vol, float pitch)
     voice->data = (Sint16 *)(sound->data);
 }
 
+/* that is the callback */
 void
 mix_audio(void *data, Uint8 *stream, int len)
 {
     int s;
     int i;
     Sint16 *buffer;
+    voice_t *playback;
 
-    /* buffer points to stream(?), why not just manipulate the stream directly ? */
 	/* init buffer */
     buffer = (Sint16 *)stream;
 	memset(buffer, 0, len); /* clear the buffer. data comes from voice */
@@ -57,20 +58,22 @@ mix_audio(void *data, Uint8 *stream, int len)
 
     /* for every channel (voice) ... */
     for(i=0; i <= 10; ++i) {
+
+        playback = &voice[i];
 			
 		/* roll over the samples */
 		for(s = 0; s < len; ++s) {
-            if(voice[i].pos >= voice[i].len) {
+            if(playback->pos >= playback->len) {
                 voice[i].data = NULL; 
                 break;
             }
 
 			/* fill buffer, interleave audio signal */
             /* shift down by 10 to (hopefully) prevent clipping */
-			buffer[s * 2] += voice[i].data[voice[i].pos] * voice[i].vol >> 10; /* left channel output */
-			buffer[s * 2 + 1] += voice[i].data[voice[i].pos] * voice[i].vol >> 10; /* right channel output */
-			voice[i].pos = (Sint16)voice[i].f_pos;
-			voice[i].f_pos += voice[i].pitch;
+			buffer[s * 2] += playback->data[playback->pos] * playback->vol >> 10; /* left channel output */
+			buffer[s * 2 + 1] += playback->data[playback->pos] * playback->vol >> 10; /* right channel output */
+			playback->pos = (Sint16)playback->f_pos;
+			playback->f_pos += (float)playback->pitch;
 		}
     }
 }
@@ -121,7 +124,6 @@ void
 play(tune_t *cur, tune_t *head, sound_t *sounds, int tempo)
 {
     int x; /* position */
-    int i,n;
 
     float pitch[10 + 1];
 
@@ -140,15 +142,14 @@ play(tune_t *cur, tune_t *head, sound_t *sounds, int tempo)
 
 
     /* start at the beginning */
-    x = 0;
+    x = 0; 
     cur = head; /* dito */
-
-    i = tempo / 10;
 
     while(cur->next != NULL) { /* as long as we dont run out of nodes ... */
         while(cur->x == x) { /* ...and as long as cur->x matches x... */
             /* ...fill channel (voice) with the payload (sound) we want to pass to the output (soundcard)... */
             process_audio(&voice[cur->y], &sounds[cur->i], 1, pitch[cur->y]);
+            printf("playing sound %d\n on channel %d\n with pitch %.2f\n",cur->i,cur->y,pitch[cur->y]);
             /* ...move on to next node... */ 
             cur = cur->next;
         } /* ...and when we are done... */

@@ -48,8 +48,6 @@ int main (int argc, char *argv[])
 	SDL_Surface *restore;
 	SDL_Surface *font;
 
-    /* SDL_AudioSpec *audio; */
-
     SDL_Event event;
 
     Uint32 frame; /* holds frame time */
@@ -144,16 +142,12 @@ int main (int argc, char *argv[])
 					switch(event.key.keysym.sym) {
                         /* TODO get rid of this mess */
                         case SDLK_DOWN:
-                            pitch -= 0.5;
-                            process_audio(&voice[1],&sound[1],vol,pitch);
-							printf("pitch; %.2f\n",pitch);
-                            SDL_Delay(200);
+                            tempo -= 10;
+                            printf("tempo: %d\n",tempo);
                             break;
                         case SDLK_UP:
-                            pitch += 0.5;
-                            process_audio(&voice[1],&sound[1],vol,pitch);
-							printf("pitch; %.2f\n",pitch);
-                            SDL_Delay(200);
+                            tempo += 10;
+                            printf("tempo: %d\n",tempo);
                             break;
                         case SDLK_LEFT:
                             update_display(background,display,pos);
@@ -178,7 +172,9 @@ int main (int argc, char *argv[])
                             /* sort all nodes so they can be played in order */
                             head = msort_tune(head,n);
                             /* play them! */
+                            printf("tempo: %d\n",tempo);
                             play(cur,head,sound,tempo);
+                            printf("done.\n");
                             printf("n: %d\n",n);
                             break;
                         case SDLK_s:
@@ -249,7 +245,10 @@ int main (int argc, char *argv[])
 								update_pos(event,ui,m,&pos);
 								update_rel(event,ui,m,&rel);
                             	update_display(background,display,pos);
-								play(cur,head,sound,tempo);
+                                printf("tempo: %d\n",tempo);
+                                play(cur,head,sound,tempo);
+                                printf("done.\n");
+                                printf("n: %d\n",n);
 							}
                             printf("#: %d\n",b.active);
                             printf("nodes: %d\n",n);

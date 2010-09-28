@@ -29,8 +29,6 @@
 
 #define TEMPO           120
 
-#define SET             "default/bass.wav", "default/cowbell.wav", "default/ding.wav", "default/flutter.wav", "default/strings.wav", NULL
-
 #define FONT			"default/font14x18.bmp"
 #define FONT_WIDTH		14
 #define FONT_HEIGHT		18
