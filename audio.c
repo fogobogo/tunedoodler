@@ -27,7 +27,7 @@ dummy(void *data, Uint8 *stream, int len)
 void
 process_audio(voice_t *voice, sound_t *sound, int vol, float pitch)
 {
-    voice->data = NULL; /* clear channel */
+    voice->data = NULL; /* stop channel */
 
     /* process audio data */
     voice->len = sound->len / 2; /* why ?! stereo maybe ? */
@@ -38,7 +38,7 @@ process_audio(voice_t *voice, sound_t *sound, int vol, float pitch)
     voice->pitch = pitch;
 
 	/* point the channel to the sound data */
-    voice->data = (Sint16 *)sound->data;
+    voice->data = (Sint16 *)(sound->data);
 }
 
 void
@@ -65,11 +65,11 @@ mix_audio(void *data, Uint8 *stream, int len)
                 break;
             }
 
-			voice[i].pos = (Sint16)voice[i].f_pos; /* float to int */
 			/* fill buffer, interleave audio signal */
             /* shift down by 10 to (hopefully) prevent clipping */
 			buffer[s * 2] += voice[i].data[voice[i].pos] * voice[i].vol >> 10; /* left channel output */
 			buffer[s * 2 + 1] += voice[i].data[voice[i].pos] * voice[i].vol >> 10; /* right channel output */
+			voice[i].pos = (Sint16)voice[i].f_pos;
 			voice[i].f_pos += voice[i].pitch;
 		}
     }
@@ -84,10 +84,10 @@ init_audio()
         fprintf(stdout,"could not initalize audio... :<\n");
     }
 
-    req.freq = 44100;
+    req.freq = 48000;
     req.format = AUDIO_S16SYS;
     req.channels = 2; /* stereo */
-    req.samples = 1024; /* big buffer would be ok, we won't need a quick response */
+    req.samples = 2048; /* big buffer would be ok, we won't need a quick response */
     req.callback = mix_audio;
     req.userdata = NULL;
 
@@ -114,5 +114,48 @@ free_audio()
 {
     SDL_PauseAudio(1);
     SDL_CloseAudio();
+}
+
+
+void
+play(tune_t *cur, tune_t *head, sound_t *sounds, int tempo)
+{
+    int x; /* position */
+    int i,n;
+
+    float pitch[10 + 1];
+
+    pitch[11] = 1.0;
+    pitch[10] = 1.25;
+    pitch[9] = 1.5;
+    pitch[8] = 1.75;
+    pitch[7] = 2.0;
+    pitch[6] = 2.25;
+    pitch[5] = 2.5;
+    pitch[4] = 2.75;
+    pitch[3] = 3.0;
+    pitch[2] = 3.25;
+    pitch[1] = 3.5;
+    pitch[0] = 3.75;
+
+
+    /* start at the beginning */
+    x = 0;
+    cur = head; /* dito */
+
+    i = tempo / 10;
+
+    while(cur->next != NULL) { /* as long as we dont run out of nodes ... */
+        while(cur->x == x) { /* ...and as long as cur->x matches x... */
+            /* ...fill channel (voice) with the payload (sound) we want to pass to the output (soundcard)... */
+            process_audio(&voice[cur->y], &sounds[cur->i], 1, pitch[cur->y]);
+            /* ...move on to next node... */ 
+            cur = cur->next;
+        } /* ...and when we are done... */
+
+        SDL_Delay(tempo); /* .. give some time for playback .. */
+        x++; /* ...and increase x */
+    }
+    printf("time: %dms\n", x * tempo);
 }
 

@@ -27,7 +27,7 @@
 #define PLAYICON		"default/play-icon.bmp"
 #define STOPICON		"default/stop-icon.bmp"
 
-#define TEMPO           160
+#define TEMPO           120
 
 #define SET             "default/bass.wav", "default/cowbell.wav", "default/ding.wav", "default/flutter.wav", "default/strings.wav", NULL
 

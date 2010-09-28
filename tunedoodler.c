@@ -178,7 +178,7 @@ int main (int argc, char *argv[])
                             /* sort all nodes so they can be played in order */
                             head = msort_tune(head,n);
                             /* play them! */
-                            play_tune(cur,head,n,sound,TEMPO);
+                            play(cur,head,sound,tempo);
                             printf("n: %d\n",n);
                             break;
                         case SDLK_s:
@@ -249,7 +249,7 @@ int main (int argc, char *argv[])
 								update_pos(event,ui,m,&pos);
 								update_rel(event,ui,m,&rel);
                             	update_display(background,display,pos);
-								play_tune(cur,head,n,sound,TEMPO);
+								play(cur,head,sound,tempo);
 							}
                             printf("#: %d\n",b.active);
                             printf("nodes: %d\n",n);
@@ -297,7 +297,7 @@ int main (int argc, char *argv[])
 		/* printf("x: %d\ty: %d\n",event.motion.x, event.motion.y); */
 
 		if(loop_tune == 1) {
-			play_tune(cur,head,n,sound,TEMPO);
+			play(cur,head,sound,tempo);
 		}
 
 		if(pg.num != pg.before) {
