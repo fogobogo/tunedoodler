@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <SDL/SDL.h>
 
 #include "define.h"
@@ -38,8 +39,16 @@
 /* DONE: removal of nodes */
 /* TODO: find a better way to organise the functions */
 /* TODO: seperate event loop to a event.c */
+/* TODO: non locking playback */
 
 /* TODO TODO TODO: ERROR CHECKING!!!!! */
+
+int loop = 1;
+
+void
+sig() {
+    loop = 0;
+}
 
 int main (int argc, char *argv[])
 {
@@ -51,8 +60,9 @@ int main (int argc, char *argv[])
     SDL_Event event;
 
     Uint32 frame; /* holds frame time */
-    int loop = 1;
+    /* int loop = 1; */
     int loop_tune = 0;
+    int play_tune = 0;
     int blit = 0;
 
     float pitch = 1;
@@ -61,15 +71,15 @@ int main (int argc, char *argv[])
 	int i;
 	unsigned int tempo;
 
+    int td; /* time delta */
+    int tn, tb; /* time now, time before */
+
     tempo = TEMPO;
 
 
     int n = 0; /* node counter */
 
 	
-	printf("welcome to: %s - %s\n", TITLE, VERSION);
-
-
     theme_t		ui; /* user interface resources. */
     metric_t    m; 	/* offsets, margins */
     button_t    b;  /* button tracking */
@@ -79,13 +89,16 @@ int main (int argc, char *argv[])
     tune_t *cur;
     tune_t *new;
 
-    sound_t sound[4];
+    /* sound_t sound[4]; */
 
     SDL_Rect pos;
     SDL_Rect rel;
     SDL_Rect clip;
 
     atexit(SDL_Quit);
+
+    signal(SIGTERM, sig);
+	signal(SIGINT, sig);
 
     /* let's go */
     display = init_sdl(SCREEN_WIDTH, SCREEN_HEIGHT); /* init sdl */
@@ -99,7 +112,7 @@ int main (int argc, char *argv[])
     init_offsets(display,ui,&m,b);
     init_margins(ui,&m);
 
-    init_audio(&audio);
+    init_audio();
 
 	init_font(&font);
 
@@ -114,17 +127,7 @@ int main (int argc, char *argv[])
     SDL_BlitSurface(background,NULL,display,NULL);
     SDL_UpdateRect(display,0,0,0,0);
   
-    /* TEST. A.K.A. startup sound */
-    sound[0].data = NULL;
-    load_audio(sound);
-
-	/*
-    process_audio(&voice[0],&sound[0],1,1.0);
-    if(voice[0].data == NULL) {
-        printf("ouch.\n");
-    }
-	*/
-
+    load_audio();
 
 	/* do_print("1234567890",100,100,font,display); */
 
@@ -141,13 +144,15 @@ int main (int argc, char *argv[])
 				case SDL_KEYDOWN:
 					switch(event.key.keysym.sym) {
                         /* TODO get rid of this mess */
-                        case SDLK_DOWN:
-                            tempo -= 10;
-                            printf("tempo: %d\n",tempo);
-                            break;
                         case SDLK_UP:
-                            tempo += 10;
-                            printf("tempo: %d\n",tempo);
+                            update_display(background,display,pos);
+                            pos.y -= ui.icon->h;
+                            blit_click(display,ui,pos,clip);
+                            break;
+                        case SDLK_DOWN:
+                            update_display(background,display,pos);
+                            pos.y += ui.icon->h;
+                            blit_click(display,ui,pos,clip);
                             break;
                         case SDLK_LEFT:
                             update_display(background,display,pos);
@@ -160,10 +165,18 @@ int main (int argc, char *argv[])
                             blit_click(display,ui,pos,clip);
                             break;
 
-						case SDLK_q:
+                        case SDLK_c:
+                            tempo -= 10;
+                            printf("tempo: %d\n",tempo);
+                            break;
+                        case SDLK_v:
+                            tempo += 10;
+                            printf("tempo: %d\n",tempo);
+                            break;
+						case SDLK_q: /* QUIT */
 							loop = 0;
 							break;
-                        case SDLK_p:
+                        case SDLK_p: /* PLAY */
                             /* set the active button to none */
                             b.active = BUTTON_NONE;
                             printf("b.active: %d\n",b.active);
@@ -172,17 +185,14 @@ int main (int argc, char *argv[])
                             /* sort all nodes so they can be played in order */
                             head = msort_tune(head,n);
                             /* play them! */
-                            printf("tempo: %d\n",tempo);
-                            play(cur,head,sound,tempo);
-                            printf("done.\n");
-                            printf("n: %d\n",n);
+                            play_tune = 1;
                             break;
                         case SDLK_s:
                             head = msort_tune(head,n);
                             cur = head;
                             print_tune(&head,&cur);
                             break;
-                        case SDLK_l:
+                        case SDLK_l: /* LOOP */
                             b.active = BUTTON_NONE;
 							/* toggle looping */
                             if(loop_tune == 0) {
@@ -226,12 +236,12 @@ int main (int argc, char *argv[])
                         case SDL_BUTTON_LEFT:
                             /* find out if a button was clicked and set the active button to it */
                             button_click(event,ui,m,&b);
-                            /* update the clipping rectangle for the icon. but only if the active button isn't none */
+                            /* update the clipping rectangle for the icon */
                             update_clip(ui,b.active,&clip);
-                            /* check if the current positon is in the snap grid zone */
+                            update_pos(event,ui,m,&pos);
+                            update_rel(event,ui,m,&rel);
+                            /* check if the current positon is in the snap-grid zone */
                             if(check_bounds(event,display,ui,m,b) == 1) {
-                                update_pos(event,ui,m,&pos);
-                                update_rel(event,ui,m,&rel);
                                 /* initalize the members of the current node with the relative values */
                                 store_tune(&cur, rel.x, rel.y, b.active, pg.num);
                                 /* create the next node */
@@ -242,13 +252,9 @@ int main (int argc, char *argv[])
                             }
 							if(check_play(event,ui) == 1) {
 								b.active = BUTTON_NONE;
-								update_pos(event,ui,m,&pos);
-								update_rel(event,ui,m,&rel);
                             	update_display(background,display,pos);
-                                printf("tempo: %d\n",tempo);
-                                play(cur,head,sound,tempo);
-                                printf("done.\n");
-                                printf("n: %d\n",n);
+                                head = msort_tune(head,n);
+                                play_tune = 1;
 							}
                             printf("#: %d\n",b.active);
                             printf("nodes: %d\n",n);
@@ -296,8 +302,13 @@ int main (int argc, char *argv[])
 		/* printf("x: %d\ty: %d\n",event.motion.x, event.motion.y); */
 
 		if(loop_tune == 1) {
-			play(cur,head,sound,tempo);
+			play(cur,head,tempo);
 		}
+
+        if(play_tune == 1) {
+            play(cur,head,tempo);
+            play_tune = 0;
+        }
 
 		if(pg.num != pg.before) {
 			pg.idx = pg.num * pg.width;
@@ -327,6 +338,7 @@ int main (int argc, char *argv[])
 		}
 
 	}
+
     /*main loop ends here. */
 
     cur = head;
@@ -335,26 +347,18 @@ int main (int argc, char *argv[])
         cur = cur->next;
     }
 
+
     printf("cleaning up... ");
     free_tune(&head,&cur);
-    free_audio(&audio);
+    free_ui(&ui);
     /* offload ui */
-    SDL_FreeSurface(ui.line);
-    SDL_FreeSurface(ui.button);
-    SDL_FreeSurface(ui.icon);
-    SDL_FreeSurface(ui.play);
-    SDL_FreeSurface(ui.playicon);
     /* SDL_FreeSurface(ui.icon_pressed); */
     SDL_FreeSurface(font);
 
     /* offload main surfaces */
     SDL_FreeSurface(restore);
     SDL_FreeSurface(background); 
-    SDL_FreeSurface(display);
-    SDL_FreeWAV(sound[0].data);
-    SDL_FreeWAV(sound[1].data);
-    SDL_FreeWAV(sound[2].data);
-    SDL_FreeWAV(sound[3].data);
+    free_audio(&sound);
 
     SDL_Quit();
     printf("done.\n");

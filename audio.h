@@ -31,6 +31,7 @@ typedef struct {
 
 /* playback channels. global variable */
 voice_t voice[10 + 1];
+sound_t sound[4];
 
 SDL_AudioSpec audio;
 

@@ -27,7 +27,7 @@
 #define PLAYICON		"default/play-icon.bmp"
 #define STOPICON		"default/stop-icon.bmp"
 
-#define TEMPO           120
+#define TEMPO           160
 
 #define FONT			"default/font14x18.bmp"
 #define FONT_WIDTH		14

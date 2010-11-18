@@ -50,7 +50,7 @@ do_print(char *str, int xpos, int ypos, SDL_Surface *font, SDL_Surface *surface)
 		SDL_BlitSurface(font,&character,surface,&pos);
 		i++;
 	}
-	
-	SDL_UpdateRect(surface,(pos.x - (FONT_WIDTH * i)),pos.y,(pos.w * i),pos.h);
+
+	SDL_UpdateRect(surface,(pos.x - (FONT_WIDTH * i)),pos.y,(pos.w * (i + 1)),pos.h);
 }
 

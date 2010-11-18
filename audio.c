@@ -25,54 +25,57 @@ dummy(void *data, Uint8 *stream, int len)
 }
 
 void
-process_audio(voice_t *voice, sound_t *sound, int vol, float pitch)
+process_audio(int y, int i, int vol, float pitch)
 {
-    voice->data = NULL; /* stop channel */
+    voice[y].data = NULL; /* stop channel */
 
     /* process audio data */
-    voice->len = sound->len / 2; /* why ?! for stereo maybe ? */
-    voice->pos = 0;
-    voice->f_pos = 0.0;
+    /* The data that comes in stream is a pointer of size len bytes, but your data is 16 bit (2 bytes) then the size will be len/2. */
+    voice[y].len = sound[i].len / 2;
+    voice[y].pos = 0;
+    voice[y].f_pos = 0.0;
 	/* pump up the volume! pump it up! pump it up! */
-	voice->vol = (int)vol * 256.0;
-    voice->pitch = pitch;
+	voice[y].vol = (int)vol * 256.0;
+    voice[y].pitch = pitch;
 
 	/* point the channel to the sound data */
-    voice->data = (Sint16 *)(sound->data);
+    voice[y].data = (Sint16 *)(sound[i].data);
 }
 
 /* that is the callback */
 void
-mix_audio(void *data, Uint8 *stream, int len)
+mix_audio(void *udata, Uint8 *stream, int len)
 {
     int s;
-    int i;
-    Sint16 *buffer;
+    int y;
+    Sint16 *data;
     voice_t *playback;
 
 	/* init buffer */
-    buffer = (Sint16 *)stream;
-	memset(buffer, 0, len); /* clear the buffer. data comes from voice */
+    data = (Sint16 *)stream;
+	/* memset(buffer, 0, len); */
 
     len /= 4;
 
     /* for every channel (voice) ... */
-    for(i=0; i <= 10; ++i) {
+    for(y=0; y <= 10; y++) {
 
-        playback = &voice[i];
+        playback = &voice[y];
+        /* never gets executed? */
+        if(!playback->data) { continue; printf("nol\n"); }
 			
 		/* roll over the samples */
-		for(s = 0; s < len; ++s) {
+		for(s = 0; s < len; s++) {
             if(playback->pos >= playback->len) {
-                voice[i].data = NULL; 
+                playback->data = NULL;
                 break;
             }
 
 			/* fill buffer, interleave audio signal */
             /* shift down by 10 to (hopefully) prevent clipping */
-			buffer[s * 2] += playback->data[playback->pos] * playback->vol >> 10; /* left channel output */
-			buffer[s * 2 + 1] += playback->data[playback->pos] * playback->vol >> 10; /* right channel output */
 			playback->pos = (Sint16)playback->f_pos;
+			data[s * 2] += playback->data[playback->pos] * playback->vol >> 10; /* left channel output */
+			data[s * 2 + 1] += playback->data[playback->pos + 1] * playback->vol >> 10; /* right channel output */
 			playback->f_pos += (float)playback->pitch;
 		}
     }
@@ -81,16 +84,16 @@ mix_audio(void *data, Uint8 *stream, int len)
 void
 init_audio()
 {
-    SDL_AudioSpec req;
+    SDL_AudioSpec req; /* request */
 
     if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
         fprintf(stdout,"could not initalize audio... :<\n");
     }
 
-    req.freq = 48000;
+    req.freq = 44100;
     req.format = AUDIO_S16SYS;
     req.channels = 2; /* stereo */
-    req.samples = 2048; /* big buffer would be ok, we won't need a quick response */
+    req.samples = 1024; /* big buffer would be ok, we won't need a quick response */
     req.callback = mix_audio;
     req.userdata = NULL;
 
@@ -104,7 +107,7 @@ init_audio()
 }
 
 void
-load_audio(sound_t *sound)
+load_audio()
 {
     SDL_LoadWAV("default/pluck2.wav",&audio,&sound[0].data,&sound[0].len);
     SDL_LoadWAV("default/tom2.wav",&audio,&sound[1].data,&sound[1].len);
@@ -113,20 +116,13 @@ load_audio(sound_t *sound)
 }
 
 void
-free_audio() 
-{
-    SDL_PauseAudio(1);
-    SDL_CloseAudio();
-}
-
-
-void
-play(tune_t *cur, tune_t *head, sound_t *sounds, int tempo)
+play(tune_t *cur, tune_t *head, int tempo)
 {
     int x; /* position */
 
     float pitch[10 + 1];
 
+    /* TODO: replace that crap */
     pitch[11] = 1.0;
     pitch[10] = 1.25;
     pitch[9] = 1.5;
@@ -148,8 +144,9 @@ play(tune_t *cur, tune_t *head, sound_t *sounds, int tempo)
     while(cur->next != NULL) { /* as long as we dont run out of nodes ... */
         while(cur->x == x) { /* ...and as long as cur->x matches x... */
             /* ...fill channel (voice) with the payload (sound) we want to pass to the output (soundcard)... */
-            process_audio(&voice[cur->y], &sounds[cur->i], 1, pitch[cur->y]);
-            printf("playing sound %d\n on channel %d\n with pitch %.2f\n",cur->i,cur->y,pitch[cur->y]);
+            process_audio(cur->y, cur->i, 1, pitch[cur->y]);
+            printf("playing sound %d\n on y: %d\n with pitch %.2f\n",cur->i,cur->y,pitch[cur->y]);
+            printf("-- x: %d\n",x); 
             /* ...move on to next node... */ 
             cur = cur->next;
         } /* ...and when we are done... */
@@ -160,3 +157,13 @@ play(tune_t *cur, tune_t *head, sound_t *sounds, int tempo)
     printf("time: %dms\n", x * tempo);
 }
 
+void
+free_audio()
+{
+    SDL_FreeWAV(sound[0].data);
+    SDL_FreeWAV(sound[1].data);
+    SDL_FreeWAV(sound[2].data);
+    SDL_FreeWAV(sound[3].data);
+    SDL_PauseAudio(1);
+    SDL_CloseAudio();
+}

@@ -98,8 +98,8 @@ merge_tune(tune_t *left, tune_t *right)
     if(right == NULL) { return(left); }
 
     /* TODO: make function of this ? */
-    /* compare both halfs that were given as argument */
     /* [comparsion starts here.] */
+    /* compare both halfs that were given as argument */
     if(left->x <= right->x) {
         sort  = left;
         /* move to next tune */
@@ -206,21 +206,16 @@ delete_tune(tune_t **head, tune_t **cur, int *n, int rx, int ry)
         /* if the current relative coordinates match a node */
         if((*cur)->x == rx
         && (*cur)->y == ry) {
-
-            /* in case the first node is deleted move the head */
-            if((*cur) == (*head)) {
-                (*head) = (*head)->next;
-            }
-            /* else relink */
-            else { prev->next = (*cur)->next; }
+            prev->next = (*cur)->next;
             free((*cur));
+            (*cur) = prev->next;
             printf("removed tune %d\n",i);
-            (*n)--;
         }
         else {
             prev = (*cur);
             (*cur) = (*cur)->next;
         }
+
         i++;
     }
 }

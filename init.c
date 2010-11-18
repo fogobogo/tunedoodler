@@ -31,6 +31,16 @@ init_ui(theme_t *ui, button_t *b)
     b->before = BUTTON_NONE;
 }
 
+void
+free_ui(theme_t *ui) {
+    SDL_FreeSurface(ui->button);
+    SDL_FreeSurface(ui->icon);
+    SDL_FreeSurface(ui->play);
+    SDL_FreeSurface(ui->playicon);
+    SDL_FreeSurface(ui->stopicon);
+    SDL_FreeSurface(ui->line);
+}
+
 /* find out how much icons we have and how many buttons fit in the window */
 void
 init_total(SDL_Surface *display, theme_t *ui, button_t *b)
